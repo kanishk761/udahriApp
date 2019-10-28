@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/refresh"
+        android:title="Refresh" />
+    <item
+        android:id="@+id/clear_history"
+        android:title="clear history" />
+    <item
+        android:id="@+id/logout"
+        android:title="logout" />
+</menu>

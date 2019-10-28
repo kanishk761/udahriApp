@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "37591083665",
+    "firebase_url": "https://udhariaaps.firebaseio.com",
+    "project_id": "udhariaaps",
+    "storage_bucket": "udhariaaps.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:37591083665:android:518545a8bdd581ab",
+        "android_client_info": {
+          "package_name": "com.example.udahriapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "37591083665-t00si4h7aumloaj2gb3rcsje5op935g4.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.udahriapp",
+            "certificate_hash": "20af9dc1509e3c046aaf85f07e5877061db64b01"
+          }
+        },
+        {
+          "client_id": "37591083665-ma2mgl0bd2bp12uf5i2m7b8tn6qhcj90.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCrcMG9-qAvWLw7X7vkuw-Q05RHyrjymeU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "37591083665-ma2mgl0bd2bp12uf5i2m7b8tn6qhcj90.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
