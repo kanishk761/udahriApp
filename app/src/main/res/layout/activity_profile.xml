@@ -4,10 +4,12 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/primaryLightColor"
     tools:context=".ProfileActivity">
 
     <EditText
         android:id="@+id/editText2"
+        style="@style/Widget.MaterialComponents.TextInputEditText.OutlinedBox.Dense"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="96dp"
@@ -16,18 +18,23 @@
         android:ems="10"
         android:hint="Enter Name"
         android:inputType="textPersonName"
+        android:textColor="@color/primaryTextColor"
+        android:textColorHighlight="@color/secondaryTextColor"
+        android:textColorHint="@color/secondaryTextColor"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
     <Button
         android:id="@+id/button3"
+        style="@style/Widget.MaterialComponents.Button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="160dp"
         android:layout_marginTop="44dp"
         android:layout_marginEnd="160dp"
         android:text="Sign up"
+        android:textAppearance="@style/TextAppearance.AppCompat.Body1"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/editText2" />
@@ -40,6 +47,7 @@
         android:layout_marginTop="206dp"
         android:layout_marginEnd="97dp"
         android:text="Enter your name"
+        android:textColor="@color/secondaryDarkColor"
         android:textSize="30sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
