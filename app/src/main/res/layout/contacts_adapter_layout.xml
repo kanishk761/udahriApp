@@ -20,7 +20,7 @@
         android:id="@+id/phone_contact"
         style="@android:style/Widget.Holo.TextView"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="19dp"
         android:paddingLeft="15dp"
         app:layout_constraintTop_toBottomOf="@+id/name_contact"
         tools:layout_editor_absoluteX="16dp" />

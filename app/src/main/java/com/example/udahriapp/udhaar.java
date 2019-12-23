@@ -95,7 +95,7 @@ public class udhaar extends Fragment {
             @Override
             public boolean onItemLongClick(AdapterView<?> parent, View view, final int position, long id) {
 
-               listItems = new String[]{"Cash","PayTM","other"};
+               listItems = new String[]{"Cash","PayTM","Gpay","other"};
                 AlertDialog.Builder mBuilder = new AlertDialog.Builder(getActivity());
                 mBuilder.setTitle("Paid via")
                         .setSingleChoiceItems(listItems, -1, new DialogInterface.OnClickListener() {

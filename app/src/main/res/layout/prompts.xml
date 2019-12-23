@@ -12,6 +12,7 @@
         android:gravity="center"
         android:paddingTop="20dp"
         android:text="Enter the amount"
+        android:textColor="@color/colorPrimary"
         android:textSize="30sp" />
 
     <EditText
@@ -20,6 +21,8 @@
         android:layout_height="wrap_content"
         android:ems="10"
         android:inputType="number"
-        android:padding="10dp"/>
+        android:padding="10dp"
+        android:textAlignment="center"
+        android:textColor="@color/colorAccent" />
 
 </LinearLayout>
