@@ -22,11 +22,13 @@ public class VerifyPhoneActivity extends AppCompatActivity {
     private EditText vcode;
     private FirebaseAuth mAuth;
     private String mVerificationId;
+    private boolean OTPsent;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_verify_phone);
 
+        OTPsent = false;
         mAuth = FirebaseAuth.getInstance();
         vcode = (EditText) findViewById(R.id.editText3);
         signin = (Button) findViewById(R.id.button2);
@@ -37,8 +39,14 @@ public class VerifyPhoneActivity extends AppCompatActivity {
         signin.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                String code=vcode.getText().toString();
-                verifyVerificationCode(code);
+                if(OTPsent) {
+                    String code = vcode.getText().toString();
+                    verifyVerificationCode(code);
+                }
+                else
+                {
+                    Toast.makeText(VerifyPhoneActivity.this,"no OTP",Toast.LENGTH_LONG).show();
+                }
 
             }
         });
@@ -51,6 +59,7 @@ public class VerifyPhoneActivity extends AppCompatActivity {
                     this,
                     mCallbacks);
             Toast.makeText(VerifyPhoneActivity.this,"OTP Sent Valid for 60 Seconds",Toast.LENGTH_LONG).show();
+
 
         }
         private PhoneAuthProvider.OnVerificationStateChangedCallbacks mCallbacks =new PhoneAuthProvider.OnVerificationStateChangedCallbacks() {
@@ -67,12 +76,14 @@ public class VerifyPhoneActivity extends AppCompatActivity {
             @Override
             public void onVerificationFailed(FirebaseException e) {
 
-                Toast.makeText(VerifyPhoneActivity.this,"Failed due to "+e.getMessage().toString(),Toast.LENGTH_LONG).show();
+                Toast.makeText(VerifyPhoneActivity.this,"Failed to send OTP (check your internet) ",Toast.LENGTH_LONG).show();
+                //disable the sign in button
             }
             @Override
             public void onCodeSent(String verificationId,PhoneAuthProvider.ForceResendingToken token){
 
                 mVerificationId=verificationId;
+                OTPsent = true;
 
             }
         };
