@@ -22,6 +22,8 @@ class _AddDebtScreenState extends State<AddDebtScreen> {
 
   void _addPerson(String person,String amount) {
     _persons.insert(0, detailsCard(person,amount));
+    _controllerPerson.clear();
+    _controllerAmount.clear();
     setState(() {});
   }
 
@@ -90,9 +92,6 @@ class _AddDebtScreenState extends State<AddDebtScreen> {
             TextField(
               controller: _controllerEvent,
               onChanged: (_num) {
-                setState(() {
-
-                });
               },
               maxLengthEnforcement: MaxLengthEnforcement.enforced,
               style: TextStyle(

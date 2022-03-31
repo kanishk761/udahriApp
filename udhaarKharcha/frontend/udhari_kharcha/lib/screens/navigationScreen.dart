@@ -1,8 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:udhari_kharcha/screens/home_screen.dart';
-import 'package:udhari_kharcha/screens/addDebt_screen.dart';
-import 'package:udhari_kharcha/screens/signup_screen.dart';
-
 
 
 class NavigationScreen extends StatefulWidget {

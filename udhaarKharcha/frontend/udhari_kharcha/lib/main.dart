@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:udhari_kharcha/screens/addDebt_screen.dart';
+import 'package:udhari_kharcha/screens/details_screen.dart';
 import 'package:udhari_kharcha/screens/navigationScreen.dart';
 import 'package:udhari_kharcha/screens/login_screen.dart';
 import 'package:udhari_kharcha/screens/opt_screen.dart';
@@ -30,7 +31,8 @@ class MyApp extends StatelessWidget {
         '/login' : (context) => Login(),
         '/otp' : (context) => OtpScreen(),
         '/signup' : (context) => SignupScreen(),
-        '/add' : (context) => AddDebtScreen()
+        '/add' : (context) => AddDebtScreen(),
+        '/details' : (context) => U2UDetails()
       },
     );
   }
