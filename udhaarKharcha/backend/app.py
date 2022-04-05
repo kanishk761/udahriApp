@@ -94,7 +94,7 @@ def getUdhar():
     
     try:
         q = 'SELECT * FROM udhar_kharcha.split_bills WHERE from_user_id = %s ALLOW FILTERING'
-        r = session.execute(q, (from_user_id))
+        r = session.execute(q, [from_user_id])
     except:
         return error('DB error')
     
@@ -102,7 +102,7 @@ def getUdhar():
     for each_user in r.current_rows:
         user_udhars[each_user[1]] = each_user[3]
     
-    dictionary = {'success' : True , 'message' : "All udhar for input user" , 'data' : {user_udhars} }
+    dictionary = {'success' : True , 'message' : "All udhar for input user" , 'data' : user_udhars}
     return jsonify(dictionary)
 
 
@@ -124,7 +124,7 @@ def addUdhar():
     event_time = datetime.now()
     event_id = hashlib.md5(event_time.strftime("%m/%d/%Y%H:%M:%S.%f").encode()).hexdigest()
     query = SimpleStatement('INSERT INTO udhar_kharcha.event_details (event_detail, event_id, event_participants, event_time) VALUES (%s, %s, %s, %s);', consistency_level = ConsistencyLevel.LOCAL_QUORUM)
-    session.execute(query, (event_name, event_id, participants_paid, event_time))
+    session.execute(query, (event_name, event_id, participants_paid, 10))
 
     try:
         q = 'SELECT total_amount FROM udhar_kharcha.split_bills WHERE from_user_id = %s AND to_user_id = %s'
@@ -146,13 +146,11 @@ def addUdhar():
         query = SimpleStatement("UPDATE udhar_kharcha.split_bills SET total_amount = %s WHERE from_user_id=%s AND to_user_id=%s IF EXISTS", consistency_level = ConsistencyLevel.LOCAL_QUORUM)
         results = session.execute(query, (total_amount, username_to, username_from))
     except:
-        return error('DB error')
-
-    try:
-        query = SimpleStatement("INSERT INTO udhar_kharcha.split_bills (event_ids, from_user_id, to_user_id, total_amount) VALUES (%s, %s, %s, %s) IF NOT EXISTS", consistency_level = ConsistencyLevel.LOCAL_QUORUM)
-        results = session.execute(query, ([event_id], username_from, username_to, amount))
-    except:
-        return error('DB error')
+        try:
+            query = SimpleStatement("INSERT INTO udhar_kharcha.split_bills (event_ids, from_user_id, to_user_id, total_amount) VALUES (%s, %s, %s, %s) IF NOT EXISTS", consistency_level = ConsistencyLevel.LOCAL_QUORUM)
+            results = session.execute(query, ([event_id], username_from, username_to, amount))
+        except:
+            return error('DB error')
     
     success_response = {'success' : True , 'message' : 'udhar added' , 'data' : {'display_msg' : 'udhar added'} }
     return jsonify(success_response)
@@ -210,3 +208,6 @@ if __name__ == '__main__':
 
 # print("Finished executing {} queries with a concurrency level of {} in {:.2f} seconds.".
 #       format(TOTAL_QUERIES, CONCURRENCY_LEVEL, (end-start)))
+
+if __name__ == '__main__':
+    app.run(debug = True, threaded = True)
