@@ -52,7 +52,7 @@ class _SignupScreenState extends State<SignupScreen> {
                     _controller.text.isEmpty ? _validate = true : _validate = false;
                   });
                   if(!_validate) {
-                    await FirebaseAuth.instance.currentUser!.updateDisplayName(_controller.text);
+                    await FirebaseAuth.instance.currentUser?.updateDisplayName(_controller.text);
                     Navigator.pushNamedAndRemoveUntil(context, '/home', ModalRoute.withName('/'));
                   }
 
