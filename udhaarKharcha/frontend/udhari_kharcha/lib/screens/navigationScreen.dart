@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:udhari_kharcha/screens/home_screen.dart';
 
-
 class NavigationScreen extends StatefulWidget {
   const NavigationScreen({Key? key}) : super(key: key);
 

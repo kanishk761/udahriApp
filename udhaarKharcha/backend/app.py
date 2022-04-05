@@ -10,12 +10,17 @@ from datetime import datetime
 
 app = Flask(__name__)
 
-ssl_context = SSLContext(PROTOCOL_TLSv1_2 )
-ssl_context.load_verify_locations('./sf-class2-root.crt')
-ssl_context.verify_mode = CERT_REQUIRED
-auth_provider = PlainTextAuthProvider(username='Admin-at-442245796012', password='Zo2yw3zb//WD1muANf3BPM9ZhzmO2jjDCczR+NsOx/4=')
-cluster = Cluster(['cassandra.ap-south-1.amazonaws.com'], ssl_context=ssl_context, auth_provider=auth_provider, port=9142)
+# ssl_context = SSLContext(PROTOCOL_TLSv1_2)
+# ssl_context.load_verify_locations('/home/shubham/Desktop/Desktop/Courses/Computer-System-Design/Project/udahriApp/udhaarKharcha/backend/src/sf-class2-root.crt')
+# ssl_context.verify_mode = CERT_REQUIRED
+# auth_provider = PlainTextAuthProvider(username='Admin-at-442245796012', password='Zo2yw3zb//WD1muANf3BPM9ZhzmO2jjDCczR+NsOx/4=')
+# cluster = Cluster(['cassandra.ap-south-1.amazonaws.com'], ssl_context=ssl_context, auth_provider=auth_provider, port=9142)
+# session = cluster.connect()
+
+cluster = Cluster()
 session = cluster.connect()
+
+session.set_keyspace('udhar_kharcha')
 
 def error(msg):
     dictionary = {'success' : False , 'message' : msg , 'data' : {} }
@@ -94,7 +99,7 @@ def getUdhar():
     
     try:
         q = 'SELECT * FROM udhar_kharcha.split_bills WHERE from_user_id = %s ALLOW FILTERING'
-        r = session.execute(q, (from_user_id))
+        r = session.execute(q, [from_user_id])
     except:
         return error('DB error')
     
@@ -102,7 +107,7 @@ def getUdhar():
     for each_user in r.current_rows:
         user_udhars[each_user[1]] = each_user[3]
     
-    dictionary = {'success' : True , 'message' : "All udhar for input user" , 'data' : {user_udhars} }
+    dictionary = {'success' : True , 'message' : "All udhar for input user" , 'data' : user_udhars }
     return jsonify(dictionary)
 
 
@@ -114,23 +119,27 @@ def addUdhar():
         username_to = input["username_to"]
         amount = input["amount"]
         event_name = input["event_name"]
-        
-
     except:
         return error('incorrect format')
+
+    print("here")
     
-    participants_paid =  {username_from : amount, username_to : -amount}
+    participants_paid =  {str(username_from) : int(amount), str(username_to) : -int(amount)}
 
     event_time = datetime.now()
     event_id = hashlib.md5(event_time.strftime("%m/%d/%Y%H:%M:%S.%f").encode()).hexdigest()
     query = SimpleStatement('INSERT INTO udhar_kharcha.event_details (event_detail, event_id, event_participants, event_time) VALUES (%s, %s, %s, %s);', consistency_level = ConsistencyLevel.LOCAL_QUORUM)
-    session.execute(query, (event_name, event_id, participants_paid, event_time))
+    session.execute(query, (event_name, event_id, participants_paid, 10))
 
     try:
+        print("inside")
         q = 'SELECT total_amount FROM udhar_kharcha.split_bills WHERE from_user_id = %s AND to_user_id = %s'
         r = session.execute(q, (username_from, username_to))
+
         cur_amount = r.current_rows[0][0]
         total_amount = cur_amount + amount
+
+        print("reached")
 
         #from A to B
         query = SimpleStatement("UPDATE udhar_kharcha.split_bills SET event_ids= event_ids + %s WHERE from_user_id=%s AND to_user_id=%s IF EXISTS", consistency_level = ConsistencyLevel.LOCAL_QUORUM)
@@ -146,13 +155,13 @@ def addUdhar():
         query = SimpleStatement("UPDATE udhar_kharcha.split_bills SET total_amount = %s WHERE from_user_id=%s AND to_user_id=%s IF EXISTS", consistency_level = ConsistencyLevel.LOCAL_QUORUM)
         results = session.execute(query, (total_amount, username_to, username_from))
     except:
-        return error('DB error')
+        try:
+            query = SimpleStatement("INSERT INTO udhar_kharcha.split_bills (event_ids, from_user_id, to_user_id, total_amount) VALUES (%s, %s, %s, %s) IF NOT EXISTS", consistency_level = ConsistencyLevel.LOCAL_QUORUM)
+            results = session.execute(query, ([event_id], username_from, username_to, amount))
+        except:
+            return error('DB error')
 
-    try:
-        query = SimpleStatement("INSERT INTO udhar_kharcha.split_bills (event_ids, from_user_id, to_user_id, total_amount) VALUES (%s, %s, %s, %s) IF NOT EXISTS", consistency_level = ConsistencyLevel.LOCAL_QUORUM)
-        results = session.execute(query, ([event_id], username_from, username_to, amount))
-    except:
-        return error('DB error')
+    print("done")
     
     success_response = {'success' : True , 'message' : 'udhar added' , 'data' : {'display_msg' : 'udhar added'} }
     return jsonify(success_response)
@@ -160,53 +169,56 @@ def addUdhar():
 
 
 
-'''@app.route('/personal_expense', methods=["POST"])
+@app.route('/personal_expense', methods=["POST"])
 def personal_expense():
     input = request.get_json()
     try:
-        
+        username = input["username"]
+        amount = input["amount"]
+        event_name = input["event_name"]
+    except:
+        return error('incorrect format')
+
+    try:
+        event_time = datetime.now()
+        event_id = hashlib.md5(event_time.strftime("%m/%d/%Y%H:%M:%S.%f").encode()).hexdigest()
+        query = SimpleStatement('INSERT INTO udhar_kharcha.event_details (event_detail, event_id, event_time) VALUES (%s, %s, %s);', consistency_level = ConsistencyLevel.LOCAL_QUORUM)
+        session.execute(query, (event_name, event_id, 10))
+
+        query = SimpleStatement("INSERT INTO udhar_kharcha.personal_expense (event_id, username, amount) VALUES (%s, %s, %s) IF NOT EXISTS", consistency_level = ConsistencyLevel.LOCAL_QUORUM)
+        session.execute(query, (event_id, username, amount))
+        success_response = {'success' : True , 'message' : 'Personal Expense Added', 'data': ''}
+        return jsonify(success_response)
+    except:
+        return error('DB error')
+
+@app.route('/get_personal_expenses', methods=["POST"])
+def get_personal_expenses():
+    input = request.get_json()
+    try:
+        username = input["username"]
+    except:
+        return error('incorrect format')
+
+    try:
+        query = 'SELECT * FROM udhar_kharcha.personal_expense WHERE username = %s ALLOW FILTERING'
+        response = session.execute(query, [username])
+    except:
+        return error('DB error')
+    
+    user_personal_expenses = list()
+    query = "SELECT event_detail, event_time FROM udhar_kharcha.event_details WHERE event_id = %s ALLOW FILTERING"
+    for expense in response.current_rows:
+        try:
+            response = session.execute(query, [expense.event_id])
+            response = response.current_rows[0]
+            user_personal_expenses.append([response.event_detail, response.event_time, expense.amount])
+        except:
+            print("here")
+            continue
+    
+    dictionary = {'success' : True , 'message' : "All personal expenses for input user" , 'data' : user_personal_expenses}
+    return jsonify(dictionary)
 
 if __name__ == '__main__':
     app.run(debug = True, threaded = True)
-'''
-
-# cluster = Cluster()
-# session = cluster.connect()
-
-# session.execute(("CREATE KEYSPACE IF NOT EXISTS examples "
-#                  "WITH replication = {'class': 'SimpleStrategy', 'replication_factor': '1' }"))
-# session.execute("USE examples")
-# session.execute("CREATE TABLE IF NOT EXISTS tbl_sample_kv (id uuid, value text, PRIMARY KEY (id))")
-# prepared_insert = session.prepare("INSERT INTO tbl_sample_kv (id, value) VALUES (?, ?)")
-
-
-# class SimpleQueryExecutor(threading.Thread):
-
-#     def run(self):
-#         global COUNTER
-
-#         while True:
-#             with COUNTER_LOCK:
-#                 current = COUNTER
-#                 COUNTER += 1
-
-#             if current >= TOTAL_QUERIES:
-#                 break
-
-#             session.execute(prepared_insert, (uuid.uuid4(), str(current)))
-
-
-# # Launch in parallel n async operations (n being the concurrency level)
-# start = time.time()
-# threads = []
-# for i in range(CONCURRENCY_LEVEL):
-#     t = SimpleQueryExecutor()
-#     threads.append(t)
-#     t.start()
-
-# for thread in threads:
-#     thread.join()
-# end = time.time()
-
-# print("Finished executing {} queries with a concurrency level of {} in {:.2f} seconds.".
-#       format(TOTAL_QUERIES, CONCURRENCY_LEVEL, (end-start)))

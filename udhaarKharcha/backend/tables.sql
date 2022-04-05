@@ -29,7 +29,8 @@ CREATE TABLE transaction_history (
 );
 
 CREATE TABLE personal_expense (
-    event_id text,
+    username text,
     amount int,
+    event_id text,
     PRIMARY KEY (event_id)
 );
