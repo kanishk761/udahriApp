@@ -107,7 +107,7 @@ def getUdhar():
     for each_user in r.current_rows:
         user_udhars[each_user[1]] = each_user[3]
     
-    dictionary = {'success' : True , 'message' : "All udhar for input user" , 'data' : user_udhars }
+    dictionary = {'success' : True , 'message' : "All udhar for input user" , 'data' : user_udhars}
     return jsonify(dictionary)
 
 
@@ -219,6 +219,9 @@ def get_personal_expenses():
     
     dictionary = {'success' : True , 'message' : "All personal expenses for input user" , 'data' : user_personal_expenses}
     return jsonify(dictionary)
+
+# print("Finished executing {} queries with a concurrency level of {} in {:.2f} seconds.".
+#       format(TOTAL_QUERIES, CONCURRENCY_LEVEL, (end-start)))
 
 if __name__ == '__main__':
     app.run(debug = True, threaded = True)
