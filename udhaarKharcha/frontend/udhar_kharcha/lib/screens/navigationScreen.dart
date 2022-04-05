@@ -12,7 +12,8 @@ class NavigationScreen extends StatefulWidget {
 
 class _NavigationScreenState extends State<NavigationScreen> {
 
-  User? user = FirebaseAuth.instance.currentUser;
+  String? _username = FirebaseAuth.instance.currentUser?.displayName ;
+  String? _phoneNumber = FirebaseAuth.instance.currentUser?.phoneNumber;
 
   Map data = {
     'Shubham' : '5',
@@ -69,12 +70,12 @@ class _NavigationScreenState extends State<NavigationScreen> {
           padding: EdgeInsets.zero,
           children: [
             UserAccountsDrawerHeader(
-              accountName: Text(user!.displayName.toString()),
-              accountEmail: Text(user!.phoneNumber.toString()),
+              accountName: Text(_username ?? ''),
+              accountEmail: Text(_phoneNumber ?? ''),
               currentAccountPicture: CircleAvatar(
                 radius: 30,
                 backgroundColor: Colors.redAccent,
-                child: Text(user!.phoneNumber.toString().isEmpty?'':'${user!.displayName.toString()[0]}',
+                child: Text((_username!=null ? _username![0] :''),
                     style : TextStyle(
                         fontSize: 30,
                         fontWeight: FontWeight.bold
