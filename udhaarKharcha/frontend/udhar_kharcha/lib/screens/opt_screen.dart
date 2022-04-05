@@ -35,7 +35,7 @@ class _OtpScreenState extends State<OtpScreen> {
                 await FirebaseAuth.instance.signInWithCredential(authCredential);
               }
             }
-            if(FirebaseAuth.instance.currentUser!.displayName != null)
+            if(FirebaseAuth.instance.currentUser?.displayName != null)
               Navigator.pushNamedAndRemoveUntil(context, '/home', ModalRoute.withName('/'));
             else
               Navigator.pushReplacementNamed(context, '/signup');
