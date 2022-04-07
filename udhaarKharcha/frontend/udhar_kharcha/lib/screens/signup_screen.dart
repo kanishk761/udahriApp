@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:udhar_kharcha/controllers/requests.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({Key? key}) : super(key: key);
@@ -13,6 +14,27 @@ class _SignupScreenState extends State<SignupScreen> {
 
   TextEditingController _controller = TextEditingController();
   bool _validate = false;
+  String _phoneNumber = FirebaseAuth.instance.currentUser?.phoneNumber ?? '';
+
+
+  void signupUserAccount(String phone ,String username, String? upi) async{
+    if(phone.isNotEmpty && username.isNotEmpty) {
+      SignUp obj = SignUp(phone, username, upi);
+      await obj.sendQuery();
+      if (obj.success) {
+        await FirebaseAuth.instance.currentUser?.updateDisplayName(username);
+        Navigator.pushNamedAndRemoveUntil(context, '/home', ModalRoute.withName('/'));
+      }
+      else {
+        print(obj.message);
+      }
+    }
+    else{
+      print('Something went wrong');
+    }
+  }
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -47,15 +69,13 @@ class _SignupScreenState extends State<SignupScreen> {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: () async{
+                onPressed: () {
                   setState(() {
                     _controller.text.isEmpty ? _validate = true : _validate = false;
                   });
                   if(!_validate) {
-                    await FirebaseAuth.instance.currentUser?.updateDisplayName(_controller.text);
-                    Navigator.pushNamedAndRemoveUntil(context, '/home', ModalRoute.withName('/'));
+                    signupUserAccount(_phoneNumber,_controller.text, 'upi');
                   }
-
                 },
                 style: ButtonStyle(),
                 child: const Text('Signup'),

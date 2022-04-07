@@ -28,7 +28,7 @@ class MyApp extends StatelessWidget {
           primarySwatch: Colors.purple,
           //fontFamily: 'NunitoLight'
       ),
-      initialRoute: '/',
+      initialRoute: '/home',
       routes: {
         '/' : (context) => WelcomeScreen(),
         '/login' : (context) => Login(),

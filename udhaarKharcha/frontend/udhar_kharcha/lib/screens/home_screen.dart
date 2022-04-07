@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:udhar_kharcha/controllers/requests.dart';
 import 'package:udhar_kharcha/screens/navigationScreen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -65,8 +66,10 @@ class _HomeScreenState extends State<HomeScreen> {
     return Padding(
       padding: EdgeInsets.all(10),
       child: Container(
-        child: Column(
-            children: listBuilder()
+        child: SingleChildScrollView(
+          child: Column(
+              children: listBuilder()
+          ),
         ),
       ),
     );

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/painting.dart';
 import 'package:flutter/services.dart';
 import 'package:udhar_kharcha/controllers/contactController.dart';
+import 'package:udhar_kharcha/controllers/requests.dart';
 
 class AddDebtScreen extends StatefulWidget {
   const AddDebtScreen({Key? key}) : super(key: key);
@@ -12,6 +13,7 @@ class AddDebtScreen extends StatefulWidget {
 }
 
 class _AddDebtScreenState extends State<AddDebtScreen> {
+  String _user = 'Saransh';
 
   ContactsController _contact = ContactsController();
 
@@ -21,19 +23,35 @@ class _AddDebtScreenState extends State<AddDebtScreen> {
   final _controllerAmount = TextEditingController();
 
   // complile all persons
-  Map<String,String> _persons = {};
+  Map _persons = {};
+
+
 
   void _addPerson(String person,String amount) {
     _personsWidget.insert(0, detailsCard(person,amount));
     _persons.addAll({person : amount});
     _controllerPerson.clear();
     _controllerAmount.clear();
+    print(_persons);
     setState(() {});
   }
 
   void _onPersonFieldTapped(context) async {
     await _contact.openContactList(context);
     _controllerPerson.text = _contact.selectedPerson;
+  }
+
+  addUdhar(String from, String event) async{
+    try {
+      for(var key in _persons.keys) {
+        print('Adding : ${key}');
+        AddUdhar obj = AddUdhar(from, key, int.parse(_persons[key]), event);
+        await obj.sendQuery();
+      }
+    }
+    catch(e) {
+      print(e);
+    }
   }
 
   @override
@@ -70,8 +88,9 @@ class _AddDebtScreenState extends State<AddDebtScreen> {
         child: SizedBox(
           width: double.infinity,
           child: FloatingActionButton.extended(
-            onPressed: (){
-              Navigator.pop(context,_persons);
+            onPressed: () async{
+              await addUdhar(_user, _controllerEvent.text);
+              Navigator.pop(context);
             },
             label: Text(
               'Add',

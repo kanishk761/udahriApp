@@ -67,7 +67,8 @@ class ContactsController {
       context: context,
       builder: (BuildContext context) {
         bool isSearching = searchController.text.isNotEmpty;
-        return Container(
+        return //ContactListView();
+          Container(
             padding: EdgeInsets.all(20),
             child: Column(
                 children: <Widget>[
@@ -98,30 +99,30 @@ class ContactsController {
                         itemBuilder: (context, index) {
                           Contact contact = isSearching == true ? contactsFiltered[index] : contacts[index];
                           return ListTile(
-                              onTap: () {
-                                Navigator.pop(context,contact.displayName!);
-                              },
-                              title: Text(contact.displayName!),
-                              subtitle: Text(
-                                  contact.phones!.isNotEmpty ? contact.phones!.elementAt(0).value! : ''
+                            onTap: () {
+                              Navigator.pop(context,contact.displayName!);
+                            },
+                            title: Text(contact.displayName!),
+                            subtitle: Text(
+                                contact.phones!.isNotEmpty ? contact.phones!.elementAt(0).value! : ''
+                            ),
+                            leading: Container(
+                              width: 36,
+                              height: 36,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
                               ),
-                              leading: Container(
-                                  width: 36,
-                                  height: 36,
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: (contact.avatar != null && contact.avatar!.length > 0) ? CircleAvatar(
-                                    backgroundImage: MemoryImage(contact.avatar!),
-                                  )
-                                      :
-                                  CircleAvatar(
-                                      child: Text(contact.initials(),
-                                          style: TextStyle(color: Colors.white)
-                                      ),
-                                      backgroundColor: Colors.redAccent
-                                  )
+                              child: (contact.avatar != null && contact.avatar!.length > 0) ? CircleAvatar(
+                                backgroundImage: MemoryImage(contact.avatar!),
                               )
+                                  :
+                              CircleAvatar(
+                                child: Text(contact.initials(),
+                                    style: TextStyle(color: Colors.white)
+                                ),
+                                backgroundColor: Colors.redAccent
+                              )
+                            )
                           );
                         }
                     ),
@@ -133,4 +134,87 @@ class ContactsController {
     );
   }
 
+}
+
+
+class ContactListView extends StatefulWidget {
+  const ContactListView({Key? key}) : super(key: key);
+
+  @override
+  State<ContactListView> createState() => _ContactListViewState();
+}
+
+class _ContactListViewState extends State<ContactListView> {
+  ContactsController obj = ContactsController();
+
+  @override
+  Widget build(BuildContext context) {
+    bool isSearching = obj.searchController.text.isNotEmpty;
+    return Container(
+        padding: EdgeInsets.all(20),
+        child: Column(
+            children: <Widget>[
+              Container(
+                child: TextField(
+                  controller: obj.searchController,
+                  onChanged: (_val) {
+                    obj.filterContacts();
+                  },
+                  decoration: InputDecoration(
+                      labelText: 'Search',
+                      border: new OutlineInputBorder(
+                          borderSide: new BorderSide(
+                              color: Theme.of(context).primaryColor
+                          )
+                      ),
+                      prefixIcon: Icon(
+                          Icons.search,
+                          color: Theme.of(context).primaryColor
+                      )
+                  ),
+                ),
+              ),
+              Expanded(
+                child: ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: isSearching == true ? obj.contactsFiltered.length : obj.contacts.length,
+                    itemBuilder: (context, index) {
+                      Contact contact = isSearching == true ? obj.contactsFiltered[index] : obj.contacts[index];
+                      return CheckboxListTile(
+                        value: false,
+                        onChanged: (bool? value) {
+                          value = value!;
+                        },
+                        // onTap: () {
+                        //   Navigator.pop(context,contact.displayName!);
+                        // },
+                        title: Text(contact.displayName!),
+                        subtitle: Text(
+                            contact.phones!.isNotEmpty ? contact.phones!.elementAt(0).value! : ''
+                        ),
+                        // leading: Container(
+                        //     width: 36,
+                        //     height: 36,
+                        //     decoration: BoxDecoration(
+                        //       shape: BoxShape.circle,
+                        //     ),
+                        //     child: (contact.avatar != null && contact.avatar!.length > 0) ? CircleAvatar(
+                        //       backgroundImage: MemoryImage(contact.avatar!),
+                        //     )
+                        //         :
+                        //     CircleAvatar(
+                        //         child: Text(contact.initials(),
+                        //             style: TextStyle(color: Colors.white)
+                        //         ),
+                        //         backgroundColor: Colors.redAccent
+                        //     )
+                        // )
+                      );
+                    }
+                ),
+              )
+            ]
+        )
+    );
+  }
 }
