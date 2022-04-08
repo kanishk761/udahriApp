@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:udhar_kharcha/controllers/requests.dart';
 import 'package:udhar_kharcha/screens/home_screen.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 
@@ -13,18 +14,10 @@ class NavigationScreen extends StatefulWidget {
 }
 
 class _NavigationScreenState extends State<NavigationScreen> {
+  String _user = 'Saransh';
 
-  String? _username = FirebaseAuth.instance.currentUser?.displayName ;
-  String? _phoneNumber = FirebaseAuth.instance.currentUser?.phoneNumber;
-
-  Map data = {
-    'Shubham' : '5',
-    'Kanishk' : '20',
-    'Chirag': '12',
-    'Nved' : '10',
-    'Rathin' : '120'
-  };
-
+  String _username = FirebaseAuth.instance.currentUser?.displayName ?? '';
+  String _phoneNumber = FirebaseAuth.instance.currentUser?.phoneNumber ?? '';
 
   // Nav bar variables
   int _selectedNavIndex = 0;
@@ -41,7 +34,7 @@ class _NavigationScreenState extends State<NavigationScreen> {
   Widget getPage(int index) {
     switch (index){
       case 0:
-        return HomeScreen(persons: data);
+        return HomeScreen(persons: persons,);
       case 1:
         return Center(child: Text('Second'),);
       default:
@@ -49,11 +42,26 @@ class _NavigationScreenState extends State<NavigationScreen> {
     }
   }
 
+
+  // get Udhar
+  Map persons = {}; // <String,int>
+
+  void getUdharData() async {
+    GetUdhar obj = GetUdhar(_user);
+    await obj.sendQuery();
+    setState(() {
+      persons = obj.data;
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    getUdharData();
+  }
+
   @override
   Widget build(BuildContext context) {
-    print(data);
-    //print(user);
-
     return Scaffold(
       backgroundColor: Color(0xfff7f6fb),
       appBar: AppBar(
@@ -72,12 +80,12 @@ class _NavigationScreenState extends State<NavigationScreen> {
           padding: EdgeInsets.zero,
           children: [
             UserAccountsDrawerHeader(
-              accountName: Text(_username ?? ''),
-              accountEmail: Text(_phoneNumber ?? ''),
+              accountName: Text(_username),
+              accountEmail: Text(_phoneNumber),
               currentAccountPicture: CircleAvatar(
                 radius: 30,
                 backgroundColor: Colors.redAccent,
-                child: Text((_username!=null ? _username![0] :''),
+                child: Text((_username.isNotEmpty?_username[0] :''),
                     style : TextStyle(
                         fontSize: 30,
                         fontWeight: FontWeight.bold
@@ -186,23 +194,8 @@ class _NavigationScreenState extends State<NavigationScreen> {
 
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () async{
-          dynamic token = FirebaseMessaging.instance.getToken(vapidKey: 'BKUNi4CsGSI79Tzk5156pj6GvzDCoxK-vM8xw6cjc-jnni4lWEicHPpIQLgjlxVR6a7NroPEjyvUebX3zSQqQoI');
-          print('$token');
-          print("token printed");
-          Map res = await Navigator.pushNamed(context, '/add') as Map;
-          print(res);
-          setState(() {
-            res.forEach((key, value) {
-              if(data.containsKey(key)){
-                var a = int.parse(data[key]);
-                var b = int.parse(value);
-                data[key] = (a+b).toString();
-              }
-              else {
-                data.addAll({key:value});
-              }
-            });
-          });
+          await Navigator.pushNamed(context, '/add');
+          getUdharData();
         },
         label: const Text('Add Udhaar'),
         icon: const Icon(Icons.add),

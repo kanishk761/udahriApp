@@ -1,10 +1,9 @@
 // ignore_for_file: non_constant_identifier_names
 import 'dart:convert';
-
 import 'package:dio/dio.dart';
 
 var options = BaseOptions(
-  baseUrl: 'http://ec2-43-204-23-206.ap-south-1.compute.amazonaws.com',
+  baseUrl: 'http://ec2-3-111-196-101.ap-south-1.compute.amazonaws.com',
   connectTimeout: 5000,
   receiveTimeout: 3000,
 );
@@ -32,12 +31,15 @@ class SignUp {
         'username': username,
         'upi_id': upi_id
       });
-      response = jsonDecode(response.data);
-      success = response.success;
-      message = response.message;
-      data = response.data;
+      response = response.data; //Map<String, dynamic>.from(response.data);
+      success = response['success'];
+      message = response['message'];
+      data = Map<String, dynamic>.from(response['data']);
+      print(message);
     }
-    catch(e) {}
+    catch(e) {
+      print(e);
+    }
   }
 
 }
@@ -67,12 +69,14 @@ class AddUdhar {
                       'amount': amount,
                       'event_name': event_name
                     });
-      response = jsonDecode(response.data);
-      success = response.success;
-      message = response.message;
-      data = response.data;
+      response = response.data;//Map<String, dynamic>.from(response.data);
+      success = response['success'];
+      message = response['message'];
+      data = Map<String, dynamic>.from(response['data']);
+      print(message);
     }
-    catch(e) {}
+    catch(e) {
+    }
 	}
 }
 
@@ -80,7 +84,7 @@ class GetUdhar {
 	late String username_from;
 	bool success = false;
 	String message = "Network Error";
-	Map data = {};
+  Map data = {};
 
 	GetUdhar(String username) {
 		username_from = username;
@@ -92,11 +96,14 @@ class GetUdhar {
       dynamic response = await dio.post('/getUdhar', data: {
                       'username_from': username_from
                     });
-      response = jsonDecode(response.data);
-      success = response.success;
-      message = response.message;
-      data = response.data;
+      response = response.data;//Map<String, dynamic>.from(response.data);
+      success = response['success'];
+      message = response['message'];
+      data = Map<String, dynamic>.from(response['data']);
+      print('response: '+ message);
     }
-    catch(e) {}
+    catch(e) {
+      print(e);
+    }
 	}
 }
