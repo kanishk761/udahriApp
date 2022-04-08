@@ -1,6 +1,8 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:udhar_kharcha/screens/home_screen.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+
 
 
 class NavigationScreen extends StatefulWidget {
@@ -184,6 +186,9 @@ class _NavigationScreenState extends State<NavigationScreen> {
 
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () async{
+          dynamic token = FirebaseMessaging.instance.getToken(vapidKey: 'BKUNi4CsGSI79Tzk5156pj6GvzDCoxK-vM8xw6cjc-jnni4lWEicHPpIQLgjlxVR6a7NroPEjyvUebX3zSQqQoI');
+          print('$token');
+          print("token printed");
           Map res = await Navigator.pushNamed(context, '/add') as Map;
           print(res);
           setState(() {

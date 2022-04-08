@@ -1,41 +1,33 @@
 {
   "project_info": {
-    "project_number": "830958939892",
-    "project_id": "udharkharcha",
-    "storage_bucket": "udharkharcha.appspot.com"
+    "project_number": "338769349458",
+    "project_id": "udhar-kharcha",
+    "storage_bucket": "udhar-kharcha.appspot.com"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:830958939892:android:b1fdd81e13b6c6e64a78a1",
+        "mobilesdk_app_id": "1:338769349458:android:ac8a076df361f8b99d088b",
         "android_client_info": {
           "package_name": "com.example.udhar_kharcha"
         }
       },
       "oauth_client": [
         {
-          "client_id": "830958939892-ohsvk19r9hoddf1mn7e016lro87rt2n6.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "com.example.udhar_kharcha",
-            "certificate_hash": "79044d53023ad06ac8462764d78f90438b105488"
-          }
-        },
-        {
-          "client_id": "830958939892-1470qthjqucrmee39lrmkrdg2jqodll0.apps.googleusercontent.com",
+          "client_id": "338769349458-8ojrb82s9hee5ss47hae9gtjj41ja1pf.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyD_BiZ9W_yrtA2rZJkmLeF99n9-ymMIXrY"
+          "current_key": "AIzaSyCEvaXFP_DVmrAJd4JXewAnNmP6v6tZMkc"
         }
       ],
       "services": {
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "830958939892-1470qthjqucrmee39lrmkrdg2jqodll0.apps.googleusercontent.com",
+              "client_id": "338769349458-8ojrb82s9hee5ss47hae9gtjj41ja1pf.apps.googleusercontent.com",
               "client_type": 3
             }
           ]
