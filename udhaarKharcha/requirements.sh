@@ -12,5 +12,6 @@ mv app.py src/
 mv flaskapp.wsgi src/
 mv sf-class2-root.crt src/
 cd ~/src
+mv flaskapp.wsgi app.wsgi
 sudo cp ../000-default.conf /etc/apache2/sites-enabled/000-default.conf
 sudo service apache2 restart

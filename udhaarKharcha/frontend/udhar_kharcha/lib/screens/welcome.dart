@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 
 class WelcomeScreen extends StatefulWidget {
   const WelcomeScreen({Key? key}) : super(key: key);
@@ -11,9 +12,39 @@ class WelcomeScreen extends StatefulWidget {
 
 class _WelcomeScreenState extends State<WelcomeScreen> {
 
+  void handleMessage(RemoteMessage message) {
+    print(message.data);
+    if(message.data["type"] == 'udhar') {
+      Navigator.pushNamed(context, '/home');
+    }
+  }
+
+  Future<void> _helperInitState() async {
+    RemoteMessage? initialMessage = await FirebaseMessaging.instance.getInitialMessage();
+
+    if(initialMessage != null) {
+      handleMessage(initialMessage);
+    }
+
+    FirebaseMessaging.onMessageOpenedApp.listen(handleMessage);
+  }
+
   @override
-  void intiState() {
+  void initState() {
     super.initState();
+
+    _helperInitState();
+
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+      print(message.notification);
+      print(message.data);
+    });
+
+    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+      print(message.notification);
+      print(message.data);
+    });
+
     User? user = FirebaseAuth.instance.currentUser;
     if (user != null) {
       print('Already signed in');
@@ -51,7 +82,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
               child: ElevatedButton(
                 style: ButtonStyle(),
                 onPressed: () {
-                    Navigator.pushNamed(context, '/login');
+                    Navigator.pushNamed(context, '/home');
                 },
                 child: const Text('Login'),
               ),

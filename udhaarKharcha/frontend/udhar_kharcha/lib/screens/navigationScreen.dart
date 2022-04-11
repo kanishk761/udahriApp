@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:udhar_kharcha/controllers/requests.dart';
 import 'package:udhar_kharcha/screens/home_screen.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:udhar_kharcha/screens/loading.dart';
 
 
@@ -15,7 +16,7 @@ class NavigationScreen extends StatefulWidget {
 }
 
 class _NavigationScreenState extends State<NavigationScreen> {
-  String _user = 'Shubham';
+  String _user = 'Saransh';
 
   String _username = FirebaseAuth.instance.currentUser?.displayName ?? '';
   String _phoneNumber = FirebaseAuth.instance.currentUser?.phoneNumber ?? '';
@@ -45,6 +46,7 @@ class _NavigationScreenState extends State<NavigationScreen> {
         return Center(child: Text('Third'),);
     }
   }
+
 
   // get Udhar
   Map persons = {'Chirag': 50, 'Darshan': 1, 'Faizan': 45, 'Gagn': 50, 'Kanishk': 90, 'Saransh': 80};
