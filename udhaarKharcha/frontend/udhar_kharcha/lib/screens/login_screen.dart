@@ -46,7 +46,7 @@ class _LoginState extends State<Login> {
           icon: const Icon(
             Icons.arrow_back_ios_rounded,
           ),
-          onPressed: () => Navigator.of(context).pop(),
+          onPressed: () => Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false),
         ),
         title: const Text(
           'Enter Mobile Number',

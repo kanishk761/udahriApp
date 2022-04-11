@@ -18,8 +18,7 @@ class U2UDetails extends StatelessWidget {
           iconTheme: IconThemeData(color: Colors.purple),
           leading: IconButton(
             icon: const Icon(
-              Icons.arrow_back_ios,
-              color: Colors.black,
+              Icons.arrow_back_ios_rounded,
             ),
             onPressed: () => Navigator.of(context).pop(),
           ),

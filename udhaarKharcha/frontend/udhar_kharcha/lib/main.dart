@@ -10,12 +10,8 @@ import 'package:udhar_kharcha/screens/welcome.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 
 import 'dart:async';
-import 'dart:convert';
 
-import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
@@ -33,7 +29,9 @@ void main() async {
   await Firebase.initializeApp();
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
-  String? token = await messaging.getToken(vapidKey: 'BKUNi4CsGSI79Tzk5156pj6GvzDCoxK-vM8xw6cjc-jnni4lWEicHPpIQLgjlxVR6a7NroPEjyvUebX3zSQqQoI');
+  String _vapidKey = 'BBYPo_xxWOjx6lvpNdGob0zmLTXUOQv0k2s1hOeQTL8r_HgY6_d0Go_pn_o2e9iYPO1hkxGJgSjkhVsNg6pd6Gw';
+
+  String? token = await messaging.getToken(vapidKey: _vapidKey);
   print(token);
   print("tokenPrinted");
   channel = const AndroidNotificationChannel(
@@ -72,7 +70,7 @@ class MyApp extends StatelessWidget {
       ),
       initialRoute: '/',
       routes: {
-        '/' : (context) => WelcomeScreen(),
+        '/' : (context) => FirebaseAuth.instance.currentUser==null ? WelcomeScreen() : NavigationScreen(),
         '/login' : (context) => Login(),
         '/signup' : (context) => SignupScreen(),
         '/home' : (context) => NavigationScreen(),

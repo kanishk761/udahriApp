@@ -68,10 +68,10 @@ class _AddDebtScreenState extends State<AddDebtScreen> {
       backgroundColor: Color(0xfff7f6fb),
       appBar: AppBar(
           elevation: 0,
+          iconTheme: IconThemeData(color: Colors.purple),
           leading: IconButton(
             icon: const Icon(
-              Icons.arrow_back_ios,
-              color: Colors.black,
+              Icons.arrow_back_ios_rounded,
             ),
             onPressed: () => Navigator.of(context).pop(),
           ),
@@ -84,76 +84,74 @@ class _AddDebtScreenState extends State<AddDebtScreen> {
           )
       ),
       body: screenBody(),
-      floatingActionButton: Padding(
-        padding: EdgeInsets.symmetric(vertical: 0,horizontal: 20),
-        child: SizedBox(
-          width: double.infinity,
-          child: FloatingActionButton.extended(
-            onPressed: () async {
-              setState(() {
-                _controllerEvent.text.isEmpty ? _validate = true : _validate = false;
-              });
-              if(!_validate) {
-                for (int i = 0; i < _contact.selectedPeople.length; i++) {
-                  if (_controllerAmount[i].text.isNotEmpty)
-                    _contact.selectedPeople[i].amount = int.parse(_controllerAmount[i].text);
-                }
-                await addUdhar(_user, _controllerEvent.text);
-                Navigator.pop(context);
-              }
-            },
-            label: Text(
-              'Add',
-              style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 20
-              ),
-            ),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(6.0))),
-          ),
-        ),
-      ),
     );
   }
 
 
   Widget screenBody() {
-    return SingleChildScrollView(
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(20, 20, 20, 100),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            TextField(
-              controller: _controllerEvent,
-              onChanged: (_num) {
-              },
-              maxLengthEnforcement: MaxLengthEnforcement.enforced,
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          TextField(
+            controller: _controllerEvent,
+            onChanged: (_num) {
+            },
+            maxLengthEnforcement: MaxLengthEnforcement.enforced,
+            style: TextStyle(
+                fontSize: 20
+            ),
+            decoration: InputDecoration(
+              contentPadding: EdgeInsets.all(20),
+              border: OutlineInputBorder(),
+              hintText: 'What is this for ?',
+              errorText: _validate ? 'Cannot be empty' : null,
+            ),
+          ),
+          SizedBox(height: 10),
+          TextButton.icon(
+            onPressed: () => _onPersonFieldTapped(context),
+            icon: Icon(Icons.add),
+            label: Text('Add people to udhar',
               style: TextStyle(
-                  fontSize: 20
-              ),
-              decoration: InputDecoration(
-                contentPadding: EdgeInsets.all(20),
-                border: OutlineInputBorder(),
-                hintText: 'What is this for ?',
-                errorText: _validate ? 'Cannot be empty' : null,
+                fontSize: 15
               ),
             ),
-            SizedBox(height: 10),
-            TextButton.icon(
-              onPressed: () => _onPersonFieldTapped(context),
-              icon: Icon(Icons.add),
-              label: Text('Add people to udhar',
+          ),
+          Expanded(
+            child: SingleChildScrollView(
+              child : Column(
+                children: _personsWidget,
+              ),
+            ),
+          ),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              child: Text(
+                'Add',
                 style: TextStyle(
-                  fontSize: 15
+                    fontWeight: FontWeight.bold,
+                    fontSize: 20
                 ),
               ),
+              onPressed: () async {
+                setState(() {
+                  _controllerEvent.text.isEmpty ? _validate = true : _validate = false;
+                });
+                if(!_validate) {
+                  for (int i = 0; i < _contact.selectedPeople.length; i++) {
+                    if (_controllerAmount[i].text.isNotEmpty)
+                      _contact.selectedPeople[i].amount = int.parse(_controllerAmount[i].text);
+                  }
+                  await addUdhar(_user, _controllerEvent.text);
+                  Navigator.pop(context);
+                }
+              },
             ),
-            Column(
-              children: _personsWidget,
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

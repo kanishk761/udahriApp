@@ -71,8 +71,8 @@ class ContactsController {
   }
 
 
-  Future<void> openContactList(context) async{
-    selectedPeople = await showModalBottomSheet(
+  Future<void> openContactList(context) async {
+    var ret = await showModalBottomSheet(
       isScrollControlled: true,
       context: context,
       builder: (BuildContext context) {
@@ -177,6 +177,9 @@ class ContactsController {
         );
       },
     );
+
+    if(ret!=null)
+      selectedPeople = ret;
   }
 
 }

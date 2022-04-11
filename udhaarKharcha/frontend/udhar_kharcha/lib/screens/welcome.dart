@@ -1,5 +1,3 @@
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 
@@ -44,16 +42,6 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
       print(message.notification);
       print(message.data);
     });
-
-    User? user = FirebaseAuth.instance.currentUser;
-    if (user != null) {
-      print('Already signed in');
-      print(user);
-      Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
-    }
-    else {
-      print('Not signed in');
-    }
   }
 
   @override
@@ -82,7 +70,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
               child: ElevatedButton(
                 style: ButtonStyle(),
                 onPressed: () {
-                    Navigator.pushNamed(context, '/home');
+                    Navigator.pushNamed(context, '/login');
                 },
                 child: const Text('Login'),
               ),

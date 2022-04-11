@@ -16,7 +16,7 @@ class NavigationScreen extends StatefulWidget {
 }
 
 class _NavigationScreenState extends State<NavigationScreen> {
-  String _user = 'Saransh';
+  String _user = 'Shubham';
 
   String _username = FirebaseAuth.instance.currentUser?.displayName ?? '';
   String _phoneNumber = FirebaseAuth.instance.currentUser?.phoneNumber ?? '';
@@ -46,7 +46,6 @@ class _NavigationScreenState extends State<NavigationScreen> {
         return Center(child: Text('Third'),);
     }
   }
-
 
   // get Udhar
   Map persons = {'Chirag': 50, 'Darshan': 1, 'Faizan': 45, 'Gagn': 50, 'Kanishk': 90, 'Saransh': 80};
@@ -85,7 +84,14 @@ class _NavigationScreenState extends State<NavigationScreen> {
           style: TextStyle(
               color: Colors.black
           ),
-        )
+        ),
+        actions: [
+          IconButton(
+            onPressed: (){},
+            icon: Icon(Icons.notifications_none_rounded),
+            iconSize: 27,
+          )
+        ],
       ),
       drawer: Drawer(
         child: ListView(
@@ -111,63 +117,6 @@ class _NavigationScreenState extends State<NavigationScreen> {
                 ),
               ),
             ),
-            // DrawerHeader(
-            //     decoration: BoxDecoration(
-            //       color: Colors.purple,
-            //     ),
-            //     child: SizedBox(
-            //         child: Column(
-            //           mainAxisAlignment: MainAxisAlignment.end,
-            //           children: [
-            //             Row(
-            //               mainAxisAlignment: MainAxisAlignment.start,
-            //               children: [
-            //                 CircleAvatar(
-            //                   radius: 30,
-            //                   backgroundColor: Colors.redAccent,
-            //                   child: const Text('S',
-            //                       style : TextStyle(
-            //                           fontSize: 30,
-            //                           fontWeight: FontWeight.bold
-            //                       )
-            //                   ),
-            //                 ),
-            //                 SizedBox(width: 20,),
-            //                 Column(
-            //                   crossAxisAlignment: CrossAxisAlignment.start,
-            //                   children: [
-            //                     Text(
-            //                       user!.displayName.toString(),
-            //                       style: TextStyle(
-            //                           fontSize: 20,
-            //                           fontWeight: FontWeight.bold
-            //                       ),
-            //                     ),
-            //                     Text(
-            //                       user!.phoneNumber.toString(),
-            //                       style: TextStyle(
-            //                           fontSize: 12
-            //                       ),
-            //                     ),
-            //                     Text(
-            //                       'UPI ID',
-            //                       style: TextStyle(
-            //                           fontSize: 12
-            //                       ),
-            //                     )
-            //                   ],
-            //                 ),
-            //                 Spacer(),
-            //                 IconButton(
-            //                   icon: Icon(Icons.edit),
-            //                   onPressed: () {},
-            //                 )
-            //               ],
-            //             )
-            //           ],
-            //         )
-            //     )
-            // ),
             ListTile(
               leading: Icon(Icons.logout),
               title: const Text('Logout'),

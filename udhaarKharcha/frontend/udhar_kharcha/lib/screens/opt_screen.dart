@@ -5,7 +5,7 @@ import 'package:flutter/services.dart';
 
 class OtpScreen extends StatefulWidget {
   final String phoneNumber;
-  OtpScreen({Key? key, required this.phoneNumber}) : super(key: key);
+  const OtpScreen({Key? key, required this.phoneNumber}) : super(key: key);
 
   @override
   State<OtpScreen> createState() => _OtpScreenState();
@@ -14,8 +14,8 @@ class OtpScreen extends StatefulWidget {
 class _OtpScreenState extends State<OtpScreen> {
 
   final _controller = TextEditingController();
-
   String _otp ='';
+  bool loading = true;
 
   // Phone Authentication
   verifyPhone() async{
@@ -29,7 +29,6 @@ class _OtpScreenState extends State<OtpScreen> {
             _otp = authCredential.smsCode.toString();
             _controller.text = _otp;
           });
-          print('Ho raha hai');
           if (authCredential.smsCode != null) {
             try {
               await FirebaseAuth.instance.signInWithCredential(authCredential);
@@ -52,10 +51,11 @@ class _OtpScreenState extends State<OtpScreen> {
           print('OTP sent');
           setState(() {
             _otp = confimationCode;
+            loading = false;
           });
         },
         codeAutoRetrievalTimeout: (String confimationCode) {
-          print('code Auto Retrieval Timeout');
+          print('Device stopped reading OTP automatically');
         },
     );
   }
@@ -64,10 +64,7 @@ class _OtpScreenState extends State<OtpScreen> {
   void initState() {
     super.initState();
     print(FirebaseAuth.instance.currentUser);
-    if(FirebaseAuth.instance.currentUser==null) {
-      print('User is null on OTP Screen');
-      verifyPhone();
-    }
+    verifyPhone();
   }
 
   @override
@@ -81,7 +78,7 @@ class _OtpScreenState extends State<OtpScreen> {
           icon: const Icon(
             Icons.arrow_back_ios_rounded,
           ),
-          onPressed: () => Navigator.of(context).pop(),
+          onPressed: () => Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false),
         ),
         backgroundColor: Color(0xfff7f6fb),
         title: const Text(
@@ -99,7 +96,7 @@ class _OtpScreenState extends State<OtpScreen> {
             SizedBox(height: 10.0,),
 
             Text(
-                'Please enter 6-digit OTP sent on number to continue'
+                'Please enter 6-digit OTP sent on your number to continue'
             ),
             SizedBox(height: 10.0,),
 
@@ -149,7 +146,14 @@ class _OtpScreenState extends State<OtpScreen> {
                     );
                   }
                 },
-                child: Text('Verify'),
+                child: loading==false ? Text('Verify') : SizedBox(
+                  height: 20,
+                  width: 20,
+                  child: CircularProgressIndicator(
+                    color: Colors.white70,
+                    strokeWidth: 2,
+                  ),
+                ),
               ),
             )
           ],
