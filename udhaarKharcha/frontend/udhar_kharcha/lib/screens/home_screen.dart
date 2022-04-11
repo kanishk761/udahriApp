@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:udhar_kharcha/controllers/requests.dart';
 
@@ -10,12 +11,13 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  String _user = 'Shubham';
+  String _user = FirebaseAuth.instance.currentUser?.displayName ?? '';
 
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
+    return widget.persons.isEmpty ? Center(child: Text('Nothing to show'),)
+        :Padding(
       padding: const EdgeInsets.all(10),
       child: RefreshIndicator(
         onRefresh: () async{
@@ -24,7 +26,7 @@ class _HomeScreenState extends State<HomeScreen> {
           await Future.delayed(Duration(seconds: 2));
         },
         child: ListView.builder(
-          physics: BouncingScrollPhysics(),
+          physics: AlwaysScrollableScrollPhysics(),
           scrollDirection: Axis.vertical,
           itemCount: widget.persons.keys.length,
           itemBuilder: (context, index) {

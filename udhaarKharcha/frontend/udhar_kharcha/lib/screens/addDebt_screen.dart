@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/painting.dart';
@@ -14,7 +15,7 @@ class AddDebtScreen extends StatefulWidget {
 }
 
 class _AddDebtScreenState extends State<AddDebtScreen> {
-  String _user = 'Shubham';
+  String _user = FirebaseAuth.instance.currentUser?.displayName ?? '';
 
   ContactsController _contact = ContactsController();
   final _controllerEvent = TextEditingController();

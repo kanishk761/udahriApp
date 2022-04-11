@@ -52,6 +52,7 @@ void main() async {
             AndroidFlutterLocalNotificationsPlugin>()
         ?.createNotificationChannel(channel);
 
+
   runApp(const MyApp());
 }
 

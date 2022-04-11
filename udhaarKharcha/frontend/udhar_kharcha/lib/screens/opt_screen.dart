@@ -13,6 +13,7 @@ class OtpScreen extends StatefulWidget {
 
 class _OtpScreenState extends State<OtpScreen> {
 
+
   final _controller = TextEditingController();
   String _otp ='';
   bool loading = true;

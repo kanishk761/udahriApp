@@ -16,7 +16,7 @@ class NavigationScreen extends StatefulWidget {
 }
 
 class _NavigationScreenState extends State<NavigationScreen> {
-  String _user = 'Shubham';
+  String _user = 'Saransh';
 
   String _username = FirebaseAuth.instance.currentUser?.displayName ?? '';
   String _phoneNumber = FirebaseAuth.instance.currentUser?.phoneNumber ?? '';
@@ -48,15 +48,14 @@ class _NavigationScreenState extends State<NavigationScreen> {
   }
 
   // get Udhar
-  Map persons = {'Chirag': 50, 'Darshan': 1, 'Faizan': 45, 'Gagn': 50, 'Kanishk': 90, 'Saransh': 80};
-  //{}; // <String,int>
+  Map persons = {}; // <String,int>
 
   void getUdharData() async {
     setState(() {
       homeLoading = true;
     });
     await Future.delayed(Duration(seconds: 2));
-    GetUdhar obj = GetUdhar(_user);
+    GetUdhar obj = GetUdhar(_username);
     await obj.sendQuery();
     setState(() {
       persons = obj.data;
