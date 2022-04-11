@@ -39,8 +39,15 @@ class _LoginState extends State<Login> {
     return Scaffold(
       backgroundColor: Color(0xfff7f6fb),
       appBar: AppBar(
+        iconTheme: IconThemeData(color: Colors.purple),
         elevation: 0,
         backgroundColor: Color(0xfff7f6fb),
+        leading: IconButton(
+          icon: const Icon(
+            Icons.arrow_back_ios_rounded,
+          ),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
         title: const Text(
           'Enter Mobile Number',
           style: TextStyle(

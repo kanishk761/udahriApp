@@ -19,6 +19,7 @@ class _OtpScreenState extends State<OtpScreen> {
 
   // Phone Authentication
   verifyPhone() async{
+    //await FirebaseAuth.instance.signOut();
     await FirebaseAuth.instance.verifyPhoneNumber(
         phoneNumber: widget.phoneNumber,
         verificationCompleted: (PhoneAuthCredential authCredential) async{
@@ -26,17 +27,19 @@ class _OtpScreenState extends State<OtpScreen> {
           if(!mounted) return;
           setState(() {
             _otp = authCredential.smsCode.toString();
+            _controller.text = _otp;
           });
+          print('Ho raha hai');
           if (authCredential.smsCode != null) {
-            try{
-              await FirebaseAuth.instance.currentUser?.linkWithCredential(authCredential);
-            }on FirebaseAuthException catch(e){
-              if(e.code == 'provider-already-linked') {
-                await FirebaseAuth.instance.signInWithCredential(authCredential);
-              }
+            try {
+              await FirebaseAuth.instance.signInWithCredential(authCredential);
+              print(FirebaseAuth.instance.currentUser);
+              print('Ho raha hai sign in');
+            } on FirebaseAuthException catch(e){
+              print(e.message);
             }
             if(FirebaseAuth.instance.currentUser?.displayName != null)
-              Navigator.pushNamedAndRemoveUntil(context, '/home', ModalRoute.withName('/'));
+              Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
             else
               Navigator.pushReplacementNamed(context, '/signup');
           }
@@ -46,7 +49,7 @@ class _OtpScreenState extends State<OtpScreen> {
         },
         codeSent: (String confimationCode, int? resendCode) {
           if(!mounted) return;
-          print('Code sent');
+          print('OTP sent');
           setState(() {
             _otp = confimationCode;
           });
@@ -72,11 +75,11 @@ class _OtpScreenState extends State<OtpScreen> {
     return Scaffold(
       backgroundColor: Color(0xfff7f6fb),
       appBar: AppBar(
+        iconTheme: IconThemeData(color: Colors.purple),
         elevation: 0,
         leading: IconButton(
           icon: const Icon(
-            Icons.arrow_back_ios,
-            color: Colors.black,
+            Icons.arrow_back_ios_rounded,
           ),
           onPressed: () => Navigator.of(context).pop(),
         ),
@@ -107,6 +110,7 @@ class _OtpScreenState extends State<OtpScreen> {
                 letterSpacing: 6.0,
               ),
               decoration: InputDecoration(
+                contentPadding: EdgeInsets.all(20),
                 border: OutlineInputBorder(),
                 counterText: ''
               ),
@@ -130,8 +134,8 @@ class _OtpScreenState extends State<OtpScreen> {
                         .then((value) async {
                       if(value.user != null) {
                         print('Verified by click');
-                        if(FirebaseAuth.instance.currentUser!.displayName != null)
-                          Navigator.pushNamedAndRemoveUntil(context, '/home', ModalRoute.withName('/'));
+                        if(FirebaseAuth.instance.currentUser?.displayName != null)
+                          Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
                         else
                           Navigator.pushReplacementNamed(context, '/signup');
                       }

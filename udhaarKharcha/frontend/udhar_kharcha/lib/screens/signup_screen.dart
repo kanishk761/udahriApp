@@ -23,10 +23,15 @@ class _SignupScreenState extends State<SignupScreen> {
       await obj.sendQuery();
       if (obj.success) {
         await FirebaseAuth.instance.currentUser?.updateDisplayName(username);
-        Navigator.pushNamedAndRemoveUntil(context, '/home', ModalRoute.withName('/'));
+        Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
       }
       else {
         print(obj.message);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Something went wrong')
+          )
+        );
       }
     }
     else{
@@ -41,10 +46,17 @@ class _SignupScreenState extends State<SignupScreen> {
     return Scaffold(
       backgroundColor: Color(0xfff7f6fb),
       appBar: AppBar(
+        iconTheme: IconThemeData(color: Colors.purple),
         elevation: 0,
         backgroundColor: Color(0xfff7f6fb),
+        leading: IconButton(
+          icon: const Icon(
+            Icons.arrow_back_ios_rounded,
+          ),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
         title: const Text(
-          'Signup',
+          'SignUp',
           style: TextStyle(
               color: Colors.black
           ),
@@ -60,6 +72,7 @@ class _SignupScreenState extends State<SignupScreen> {
               autofocus: true,
               controller: _controller,
               decoration: InputDecoration(
+                contentPadding: EdgeInsets.all(20),
                 labelText: 'Enter your username',
                 errorText: _validate ? 'Username Can\'t Be Empty' : null,
                 border: OutlineInputBorder(),

@@ -26,9 +26,9 @@ class MyApp extends StatelessWidget {
       title: 'udhar Kharcha',
       theme: ThemeData(
           primarySwatch: Colors.purple,
-          //fontFamily: 'NunitoLight'
+          fontFamily: 'Nunito'
       ),
-      initialRoute: '/home',
+      initialRoute: '/',
       routes: {
         '/' : (context) => WelcomeScreen(),
         '/login' : (context) => Login(),

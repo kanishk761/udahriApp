@@ -15,9 +15,10 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
   void intiState() {
     super.initState();
     User? user = FirebaseAuth.instance.currentUser;
-    if (user!= null) {
+    if (user != null) {
       print('Already signed in');
-      Navigator.pushNamedAndRemoveUntil(context, '/home', ModalRoute.withName('/'));
+      print(user);
+      Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
     }
     else {
       print('Not signed in');

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/painting.dart';
 import 'package:flutter/services.dart';
 import 'package:udhar_kharcha/controllers/contactController.dart';
+import 'package:udhar_kharcha/controllers/dataStore.dart';
 import 'package:udhar_kharcha/controllers/requests.dart';
 
 class AddDebtScreen extends StatefulWidget {
@@ -13,39 +14,39 @@ class AddDebtScreen extends StatefulWidget {
 }
 
 class _AddDebtScreenState extends State<AddDebtScreen> {
-  String _user = 'Saransh';
+  String _user = 'Shubham';
 
   ContactsController _contact = ContactsController();
-
-  List <Widget> _personsWidget = [];
   final _controllerEvent = TextEditingController();
-  dynamic _controllerPerson = TextEditingController();
-  final _controllerAmount = TextEditingController();
+  final controller = TextEditingController();
+  List<TextEditingController> _controllerAmount = [];
 
   // complile all persons
-  Map _persons = {};
+  List <Widget> _personsWidget = [];
+  bool _validate = false;
 
-
-
-  void _addPerson(String person,String amount) {
-    _personsWidget.insert(0, detailsCard(person,amount));
-    _persons.addAll({person : amount});
-    _controllerPerson.clear();
-    _controllerAmount.clear();
-    print(_persons);
+  void _addPeople() {
+    _personsWidget = [];
+    _controllerAmount = [];
+    for(var i = 0;i<_contact.selectedPeople.length;i++) {
+      UdharPerson element = _contact.selectedPeople[i];
+      print(element.name);
+      _controllerAmount.add(TextEditingController());
+      _personsWidget.add(udhaarEntryField(element.name, '0', i));
+    }
     setState(() {});
   }
 
   void _onPersonFieldTapped(context) async {
     await _contact.openContactList(context);
-    _controllerPerson.text = _contact.selectedPerson;
+    _addPeople();
   }
 
   addUdhar(String from, String event) async{
     try {
-      for(var key in _persons.keys) {
-        print('Adding : ${key}');
-        AddUdhar obj = AddUdhar(from, key, int.parse(_persons[key]), event);
+      for(var ele in _contact.selectedPeople) {
+        print('Adding : ${ele.name}');
+        AddUdhar obj = AddUdhar(from, ele.name, ele.amount, event);
         await obj.sendQuery();
       }
     }
@@ -88,9 +89,18 @@ class _AddDebtScreenState extends State<AddDebtScreen> {
         child: SizedBox(
           width: double.infinity,
           child: FloatingActionButton.extended(
-            onPressed: () async{
-              await addUdhar(_user, _controllerEvent.text);
-              Navigator.pop(context);
+            onPressed: () async {
+              setState(() {
+                _controllerEvent.text.isEmpty ? _validate = true : _validate = false;
+              });
+              if(!_validate) {
+                for (int i = 0; i < _contact.selectedPeople.length; i++) {
+                  if (_controllerAmount[i].text.isNotEmpty)
+                    _contact.selectedPeople[i].amount = int.parse(_controllerAmount[i].text);
+                }
+                await addUdhar(_user, _controllerEvent.text);
+                Navigator.pop(context);
+              }
             },
             label: Text(
               'Add',
@@ -123,20 +133,21 @@ class _AddDebtScreenState extends State<AddDebtScreen> {
                   fontSize: 20
               ),
               decoration: InputDecoration(
+                contentPadding: EdgeInsets.all(20),
                 border: OutlineInputBorder(),
                 hintText: 'What is this for ?',
+                errorText: _validate ? 'Cannot be empty' : null,
               ),
             ),
-            SizedBox(height: 20),
-            Text(
-                'Add your friends'
-            ),
-            SizedBox(height: 15),
-            udhaarEntryField(),
+            SizedBox(height: 10),
             TextButton.icon(
-              onPressed: () => _addPerson(_controllerPerson.text,_controllerAmount.text),
+              onPressed: () => _onPersonFieldTapped(context),
               icon: Icon(Icons.add),
-              label: Text('Add person'),
+              label: Text('Add people to udhar',
+                style: TextStyle(
+                  fontSize: 15
+                ),
+              ),
             ),
             Column(
               children: _personsWidget,
@@ -147,66 +158,72 @@ class _AddDebtScreenState extends State<AddDebtScreen> {
     );
   }
 
-  Widget udhaarEntryField() {
-    return SizedBox(
-      height: 50,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text('Take from'),
-          SizedBox(width: 20,),
-
-          Flexible(
-            child: TextField(
-              controller: _controllerPerson,
-              onTap: () => _onPersonFieldTapped(context),
-              style: TextStyle(),
-              showCursor: false,
-              readOnly: true,
-              textAlign: TextAlign.center,
-              decoration: InputDecoration(
-                  border: OutlineInputBorder(),
-                  contentPadding: EdgeInsets.symmetric(vertical: 0,horizontal: 20),
-                  suffixIcon: Icon(Icons.keyboard_arrow_down_rounded)
-              ),
-            ),
-            flex: 5,
-          ),
-          SizedBox(width: 15,),
-          Text(
-            '\u{20B9} ',
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 25,
-            ),
-          ),
-          Flexible(
-            flex: 2,
-            child: TextField(
-              controller: _controllerAmount,
-              keyboardType: TextInputType.number,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 25,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget detailsCard(String person,String amount) {
+  Widget udhaarEntryField(String name,String amount,int index) {
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(10)
       ),
-      child: ListTile(
-        leading: Icon(Icons.south_west_rounded),
-        iconColor: Colors.green,
-        title: Text('Take from ${person} ${amount}'),
+      child : Padding(
+        padding: EdgeInsets.all(10),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Flexible(
+              flex: 3,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  SizedBox(width: 10,),
+                  Text(
+                      'Take from',
+                    style: TextStyle(
+                      fontSize: 15,
+                      color: Colors.grey[600]
+                    ),
+                  ),
+                  SizedBox(width: 20,),
+                  Expanded(
+                    child: Text(
+                      name,
+                      overflow: TextOverflow.fade,
+                      maxLines: 1,
+                      softWrap: false,
+                      style: TextStyle(
+                        fontSize: 20,
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: 20,),
+                ],
+              ),
+            ),
+            Text(
+              '\u{20B9} ',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 25,
+              ),
+            ),
+            SizedBox(width: 5,),
+            Flexible(
+              flex: 1,
+              child: TextField(
+                controller: _controllerAmount[index],
+                keyboardType: TextInputType.number,
+                textAlign: TextAlign.center,
+                decoration: InputDecoration(
+                  border: InputBorder.none,
+                  hintText: '0'
+                ),
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 25,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
