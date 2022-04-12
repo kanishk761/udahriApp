@@ -37,12 +37,15 @@ class _OtpScreenState extends State<OtpScreen> {
             _otp = authCredential.smsCode.toString();
             _controller.text = _otp;
           });
-          FirebaseMessaging messaging = FirebaseMessaging.instance;
-          String? token = await messaging.getToken(vapidKey: 'BKUNi4CsGSI79Tzk5156pj6GvzDCoxK-vM8xw6cjc-jnni4lWEicHPpIQLgjlxVR6a7NroPEjyvUebX3zSQqQoI');
-          print(token);
-          print("tokenPrinted");
-          UpdateToken update_token = UpdateToken(FirebaseAuth.instance.currentUser!.phoneNumber!, token!);
-          update_token.sendQuery();
+          // FirebaseMessaging messaging = FirebaseMessaging.instance;
+          // String? token = await messaging.getToken(vapidKey: 'BBYPo_xxWOjx6lvpNdGob0zmLTXUOQv0k2s1hOeQTL8r_HgY6_d0Go_pn_o2e9iYPO1hkxGJgSjkhVsNg6pd6Gw');
+          // print(token);
+          // print("tokenPrinted");
+          // if(token!=null) {
+          //   UpdateToken update_token = UpdateToken(widget.phoneNumber, token);
+          //   update_token.sendQuery();
+          //   print("token updated");
+          // }
           if (authCredential.smsCode != null) {
             try {
               await FirebaseAuth.instance.signInWithCredential(authCredential);

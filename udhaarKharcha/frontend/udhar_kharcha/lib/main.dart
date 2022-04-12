@@ -15,6 +15,8 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
+import 'package:udhar_kharcha/screens/notification_screen.dart';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
@@ -47,7 +49,8 @@ class MyApp extends StatelessWidget {
         '/signup' : (context) => SignupScreen(),
         '/home' : (context) => NavigationScreen(),
         '/add' : (context) => AddDebtScreen(),
-        '/details' : (context) => U2UDetails()
+        '/details' : (context) => U2UDetails(),
+        '/notify' : (context) => NotificationScreen(),
       },
     );
   }

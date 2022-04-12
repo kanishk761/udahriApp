@@ -1,20 +1,20 @@
 {
   "project_info": {
-    "project_number": "830958939892",
-    "project_id": "udharkharcha",
-    "storage_bucket": "udharkharcha.appspot.com"
+    "project_number": "242072865466",
+    "project_id": "udharkharcha-7b423",
+    "storage_bucket": "udharkharcha-7b423.appspot.com"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:830958939892:android:b1fdd81e13b6c6e64a78a1",
+        "mobilesdk_app_id": "1:242072865466:android:6dca00d4a995b96f3e1083",
         "android_client_info": {
           "package_name": "com.example.udhar_kharcha"
         }
       },
       "oauth_client": [
         {
-          "client_id": "830958939892-ohsvk19r9hoddf1mn7e016lro87rt2n6.apps.googleusercontent.com",
+          "client_id": "242072865466-7kr9d33tdesavehbpbl34gnm2n508p40.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.example.udhar_kharcha",
@@ -22,20 +22,20 @@
           }
         },
         {
-          "client_id": "830958939892-1470qthjqucrmee39lrmkrdg2jqodll0.apps.googleusercontent.com",
+          "client_id": "242072865466-v2urudto4pl962ia07rajp6ogtknenn4.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyD_BiZ9W_yrtA2rZJkmLeF99n9-ymMIXrY"
+          "current_key": "AIzaSyBx0ePhhzjTToAfEzTy1irpfT_2RwnVQRc"
         }
       ],
       "services": {
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "830958939892-1470qthjqucrmee39lrmkrdg2jqodll0.apps.googleusercontent.com",
+              "client_id": "242072865466-v2urudto4pl962ia07rajp6ogtknenn4.apps.googleusercontent.com",
               "client_type": 3
             }
           ]
