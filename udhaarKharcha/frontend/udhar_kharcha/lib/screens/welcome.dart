@@ -91,8 +91,6 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
       print("I am here");
       Navigator.pushNamed(context, '/add');
     });
-
-    await FirebaseMessaging.instance.subscribeToTopic('analytics');
   }
 
   @override

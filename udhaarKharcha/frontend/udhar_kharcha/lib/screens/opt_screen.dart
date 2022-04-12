@@ -43,6 +43,7 @@ class _OtpScreenState extends State<OtpScreen> {
           print("tokenPrinted");
           UpdateToken update_token = UpdateToken(FirebaseAuth.instance.currentUser!.phoneNumber!, token!);
           update_token.sendQuery();
+          await FirebaseMessaging.instance.subscribeToTopic('analytics');
           if (authCredential.smsCode != null) {
             try {
               await FirebaseAuth.instance.signInWithCredential(authCredential);
@@ -151,6 +152,13 @@ class _OtpScreenState extends State<OtpScreen> {
                           Navigator.pushReplacementNamed(context, '/signup');
                       }
                     });
+                    FirebaseMessaging messaging = FirebaseMessaging.instance;
+                    String? token = await messaging.getToken(vapidKey: 'BKUNi4CsGSI79Tzk5156pj6GvzDCoxK-vM8xw6cjc-jnni4lWEicHPpIQLgjlxVR6a7NroPEjyvUebX3zSQqQoI');
+                    print(token);
+                    print("tokenPrinted");
+                    UpdateToken update_token = UpdateToken(FirebaseAuth.instance.currentUser!.phoneNumber!, token!);
+                    update_token.sendQuery();
+                    await FirebaseMessaging.instance.subscribeToTopic('analytics');
                   } on FirebaseAuthException catch (e) {
                     print(e.message);
                     ScaffoldMessenger.of(context).showSnackBar(
