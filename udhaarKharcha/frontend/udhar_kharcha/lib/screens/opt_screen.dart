@@ -12,7 +12,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 class OtpScreen extends StatefulWidget {
   final String phoneNumber;
-  OtpScreen({Key? key, required this.phoneNumber}) : super(key: key);
+  const OtpScreen({Key? key, required this.phoneNumber}) : super(key: key);
 
   @override
   State<OtpScreen> createState() => _OtpScreenState();
@@ -20,12 +20,14 @@ class OtpScreen extends StatefulWidget {
 
 class _OtpScreenState extends State<OtpScreen> {
 
-  final _controller = TextEditingController();
 
+  final _controller = TextEditingController();
   String _otp ='';
+  bool loading = true;
 
   // Phone Authentication
   verifyPhone() async{
+    //await FirebaseAuth.instance.signOut();
     await FirebaseAuth.instance.verifyPhoneNumber(
         phoneNumber: widget.phoneNumber,
         verificationCompleted: (PhoneAuthCredential authCredential) async{
@@ -33,6 +35,7 @@ class _OtpScreenState extends State<OtpScreen> {
           if(!mounted) return;
           setState(() {
             _otp = authCredential.smsCode.toString();
+            _controller.text = _otp;
           });
           FirebaseMessaging messaging = FirebaseMessaging.instance;
           String? token = await messaging.getToken(vapidKey: 'BKUNi4CsGSI79Tzk5156pj6GvzDCoxK-vM8xw6cjc-jnni4lWEicHPpIQLgjlxVR6a7NroPEjyvUebX3zSQqQoI');
@@ -41,15 +44,15 @@ class _OtpScreenState extends State<OtpScreen> {
           UpdateToken update_token = UpdateToken(FirebaseAuth.instance.currentUser!.phoneNumber!, token!);
           update_token.sendQuery();
           if (authCredential.smsCode != null) {
-            try{
-              await FirebaseAuth.instance.currentUser?.linkWithCredential(authCredential);
-            }on FirebaseAuthException catch(e){
-              if(e.code == 'provider-already-linked') {
-                await FirebaseAuth.instance.signInWithCredential(authCredential);
-              }
+            try {
+              await FirebaseAuth.instance.signInWithCredential(authCredential);
+              print(FirebaseAuth.instance.currentUser);
+              print('Ho raha hai sign in');
+            } on FirebaseAuthException catch(e){
+              print(e.message);
             }
             if(FirebaseAuth.instance.currentUser?.displayName != null)
-              Navigator.pushNamedAndRemoveUntil(context, '/home', ModalRoute.withName('/'));
+              Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
             else
               Navigator.pushReplacementNamed(context, '/signup');
           }
@@ -59,13 +62,14 @@ class _OtpScreenState extends State<OtpScreen> {
         },
         codeSent: (String confimationCode, int? resendCode) {
           if(!mounted) return;
-          print('Code sent');
+          print('OTP sent');
           setState(() {
             _otp = confimationCode;
+            loading = false;
           });
         },
         codeAutoRetrievalTimeout: (String confimationCode) {
-          print('code Auto Retrieval Timeout');
+          print('Device stopped reading OTP automatically');
         },
     );
   }
@@ -74,10 +78,7 @@ class _OtpScreenState extends State<OtpScreen> {
   void initState() {
     super.initState();
     print(FirebaseAuth.instance.currentUser);
-    if(FirebaseAuth.instance.currentUser==null) {
-      print('User is null on OTP Screen');
-      verifyPhone();
-    }
+    verifyPhone();
   }
 
   @override
@@ -85,13 +86,13 @@ class _OtpScreenState extends State<OtpScreen> {
     return Scaffold(
       backgroundColor: Color(0xfff7f6fb),
       appBar: AppBar(
+        iconTheme: IconThemeData(color: Colors.purple),
         elevation: 0,
         leading: IconButton(
           icon: const Icon(
-            Icons.arrow_back_ios,
-            color: Colors.black,
+            Icons.arrow_back_ios_rounded,
           ),
-          onPressed: () => Navigator.of(context).pop(),
+          onPressed: () => Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false),
         ),
         backgroundColor: Color(0xfff7f6fb),
         title: const Text(
@@ -109,7 +110,7 @@ class _OtpScreenState extends State<OtpScreen> {
             SizedBox(height: 10.0,),
 
             Text(
-                'Please enter 6-digit OTP sent on number to continue'
+                'Please enter 6-digit OTP sent on your number to continue'
             ),
             SizedBox(height: 10.0,),
 
@@ -120,6 +121,7 @@ class _OtpScreenState extends State<OtpScreen> {
                 letterSpacing: 6.0,
               ),
               decoration: InputDecoration(
+                contentPadding: EdgeInsets.all(20),
                 border: OutlineInputBorder(),
                 counterText: ''
               ),
@@ -143,8 +145,8 @@ class _OtpScreenState extends State<OtpScreen> {
                         .then((value) async {
                       if(value.user != null) {
                         print('Verified by click');
-                        if(FirebaseAuth.instance.currentUser!.displayName != null)
-                          Navigator.pushNamedAndRemoveUntil(context, '/home', ModalRoute.withName('/'));
+                        if(FirebaseAuth.instance.currentUser?.displayName != null)
+                          Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
                         else
                           Navigator.pushReplacementNamed(context, '/signup');
                       }
@@ -158,7 +160,14 @@ class _OtpScreenState extends State<OtpScreen> {
                     );
                   }
                 },
-                child: Text('Verify'),
+                child: loading==false ? Text('Verify') : SizedBox(
+                  height: 20,
+                  width: 20,
+                  child: CircularProgressIndicator(
+                    color: Colors.white70,
+                    strokeWidth: 2,
+                  ),
+                ),
               ),
             )
           ],

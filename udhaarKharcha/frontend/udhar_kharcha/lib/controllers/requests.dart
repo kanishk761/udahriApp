@@ -1,5 +1,4 @@
 // ignore_for_file: non_constant_identifier_names
-import 'dart:convert';
 import 'package:dio/dio.dart';
 
 var options = BaseOptions(
@@ -7,6 +6,7 @@ var options = BaseOptions(
   connectTimeout: 5000,
   receiveTimeout: 3000,
 );
+
 Dio dio = Dio(options);
 
 class SignUp {
@@ -31,13 +31,14 @@ class SignUp {
         'username': username,
         'upi_id': upi_id
       });
-      response = response.data; //Map<String, dynamic>.from(response.data);
+      response = response.data;
       success = response['success'];
       message = response['message'];
       data = Map<String, dynamic>.from(response['data']);
       print(message);
     }
     catch(e) {
+      print('SHit happening');
       print(e);
     }
   }

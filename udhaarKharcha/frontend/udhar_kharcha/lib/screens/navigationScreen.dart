@@ -1,9 +1,11 @@
+import 'dart:ui';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:udhar_kharcha/controllers/requests.dart';
 import 'package:udhar_kharcha/screens/home_screen.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-
+import 'package:udhar_kharcha/screens/loading.dart';
 
 
 class NavigationScreen extends StatefulWidget {
@@ -18,6 +20,9 @@ class _NavigationScreenState extends State<NavigationScreen> {
 
   String _username = FirebaseAuth.instance.currentUser?.displayName ?? '';
   String _phoneNumber = FirebaseAuth.instance.currentUser?.phoneNumber ?? '';
+
+  // loading...
+  bool homeLoading = true;
 
   // Nav bar variables
   int _selectedNavIndex = 0;
@@ -34,7 +39,7 @@ class _NavigationScreenState extends State<NavigationScreen> {
   Widget getPage(int index) {
     switch (index){
       case 0:
-        return HomeScreen(persons: persons,);
+        return homeLoading ? ShimmerLoading() : HomeScreen(persons: persons);
       case 1:
         return Center(child: Text('Second'),);
       default:
@@ -42,16 +47,21 @@ class _NavigationScreenState extends State<NavigationScreen> {
     }
   }
 
-
   // get Udhar
   Map persons = {}; // <String,int>
 
   void getUdharData() async {
-    GetUdhar obj = GetUdhar(_user);
+    setState(() {
+      homeLoading = true;
+    });
+    await Future.delayed(Duration(seconds: 2));
+    GetUdhar obj = GetUdhar(_username);
     await obj.sendQuery();
     setState(() {
       persons = obj.data;
+      homeLoading = false;
     });
+    print(persons);
   }
 
   @override
@@ -69,11 +79,18 @@ class _NavigationScreenState extends State<NavigationScreen> {
         backgroundColor: Color(0xfff7f6fb),
         iconTheme: IconThemeData(color: Colors.purple),
         title: Text(
-          _screenTitle,
+          _screenTitle=='Home' ? 'Hi ${_username}' : _screenTitle,
           style: TextStyle(
               color: Colors.black
           ),
-        )
+        ),
+        actions: [
+          IconButton(
+            onPressed: (){},
+            icon: Icon(Icons.notifications_none_rounded),
+            iconSize: 27,
+          )
+        ],
       ),
       drawer: Drawer(
         child: ListView(
@@ -82,9 +99,15 @@ class _NavigationScreenState extends State<NavigationScreen> {
             UserAccountsDrawerHeader(
               accountName: Text(_username),
               accountEmail: Text(_phoneNumber),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                    begin: Alignment.centerLeft,
+                    end: Alignment.centerRight,
+                    colors: [Colors.purple, Colors.pinkAccent])
+              ),
               currentAccountPicture: CircleAvatar(
                 radius: 30,
-                backgroundColor: Colors.redAccent,
+                backgroundColor: Colors.green,
                 child: Text((_username.isNotEmpty?_username[0] :''),
                     style : TextStyle(
                         fontSize: 30,
@@ -93,77 +116,12 @@ class _NavigationScreenState extends State<NavigationScreen> {
                 ),
               ),
             ),
-            // DrawerHeader(
-            //     decoration: BoxDecoration(
-            //       color: Colors.purple,
-            //     ),
-            //     child: SizedBox(
-            //         child: Column(
-            //           mainAxisAlignment: MainAxisAlignment.end,
-            //           children: [
-            //             Row(
-            //               mainAxisAlignment: MainAxisAlignment.start,
-            //               children: [
-            //                 CircleAvatar(
-            //                   radius: 30,
-            //                   backgroundColor: Colors.redAccent,
-            //                   child: const Text('S',
-            //                       style : TextStyle(
-            //                           fontSize: 30,
-            //                           fontWeight: FontWeight.bold
-            //                       )
-            //                   ),
-            //                 ),
-            //                 SizedBox(width: 20,),
-            //                 Column(
-            //                   crossAxisAlignment: CrossAxisAlignment.start,
-            //                   children: [
-            //                     Text(
-            //                       user!.displayName.toString(),
-            //                       style: TextStyle(
-            //                           fontSize: 20,
-            //                           fontWeight: FontWeight.bold
-            //                       ),
-            //                     ),
-            //                     Text(
-            //                       user!.phoneNumber.toString(),
-            //                       style: TextStyle(
-            //                           fontSize: 12
-            //                       ),
-            //                     ),
-            //                     Text(
-            //                       'UPI ID',
-            //                       style: TextStyle(
-            //                           fontSize: 12
-            //                       ),
-            //                     )
-            //                   ],
-            //                 ),
-            //                 Spacer(),
-            //                 IconButton(
-            //                   icon: Icon(Icons.edit),
-            //                   onPressed: () {},
-            //                 )
-            //               ],
-            //             )
-            //           ],
-            //         )
-            //     )
-            // ),
             ListTile(
               leading: Icon(Icons.logout),
               title: const Text('Logout'),
               onTap: () async{
                 await FirebaseAuth.instance.signOut();
-                Navigator.popUntil(context, (route) => route.isFirst);
-              },
-            ),
-            ListTile(
-              leading: Icon(Icons.logout),
-              title: const Text('Do '),
-              onTap: () {
-                // Update the state of the app
-                // Then close the drawer
+                Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
               },
             ),
           ],

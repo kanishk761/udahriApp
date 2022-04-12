@@ -1,5 +1,3 @@
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 
 import 'dart:async';
@@ -95,15 +93,6 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
     });
 
     await FirebaseMessaging.instance.subscribeToTopic('analytics');
-
-    User? user = FirebaseAuth.instance.currentUser;
-    if (user!= null) {
-      print('Already signed in');
-      Navigator.pushNamedAndRemoveUntil(context, '/home', ModalRoute.withName('/'));
-    }
-    else {
-      print('Not signed in');
-    }
   }
 
   @override
