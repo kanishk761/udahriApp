@@ -86,7 +86,9 @@ class _NavigationScreenState extends State<NavigationScreen> {
         ),
         actions: [
           IconButton(
-            onPressed: (){},
+            onPressed: (){
+              Navigator.of(context).pushNamed('/notify');
+            },
             icon: Icon(Icons.notifications_none_rounded),
             iconSize: 27,
           )

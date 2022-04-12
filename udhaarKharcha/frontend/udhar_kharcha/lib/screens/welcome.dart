@@ -28,9 +28,9 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
 
   void handleMessage(RemoteMessage message) {
     print(message.data);
-    if(message.notification?.android?.clickAction == 'launch_analytics_page') {
-      Navigator.pushNamed(context, '/add');
-    }
+    // if(message.notification?.android?.clickAction == 'launch_analytics_page') {
+    //   Navigator.pushNamed(context, '/add');
+    // }
   }
 
   Future<void> _initializeMessage() async {
@@ -89,14 +89,15 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
       print(message.notification);
       print(message.data);
       print("I am here");
-      Navigator.pushNamed(context, '/add');
     });
   }
+
 
   @override
   void initState() {
     super.initState();
-    handlerInitState();
+    print('chala');
+    //handlerInitState();
   }
 
   @override

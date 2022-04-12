@@ -25,6 +25,20 @@ class _OtpScreenState extends State<OtpScreen> {
   String _otp ='';
   bool loading = true;
 
+  void updateTokenAndSubscribe() async {
+    FirebaseMessaging messaging = FirebaseMessaging.instance;
+    String? token = await messaging.getToken(vapidKey: 'BKUNi4CsGSI79Tzk5156pj6GvzDCoxK-vM8xw6cjc-jnni4lWEicHPpIQLgjlxVR6a7NroPEjyvUebX3zSQqQoI');
+    print(token);
+    print("tokenPrinted");
+    await FirebaseMessaging.instance.subscribeToTopic('analytics');
+    if(token!=null) {
+      UpdateToken update_token = UpdateToken(widget.phoneNumber, token);
+      update_token.sendQuery();
+      print("token updated");
+    }
+    await FirebaseMessaging.instance.subscribeToTopic('analytics');
+  }
+
   // Phone Authentication
   verifyPhone() async{
     //await FirebaseAuth.instance.signOut();
@@ -37,13 +51,7 @@ class _OtpScreenState extends State<OtpScreen> {
             _otp = authCredential.smsCode.toString();
             _controller.text = _otp;
           });
-          FirebaseMessaging messaging = FirebaseMessaging.instance;
-          String? token = await messaging.getToken(vapidKey: 'BKUNi4CsGSI79Tzk5156pj6GvzDCoxK-vM8xw6cjc-jnni4lWEicHPpIQLgjlxVR6a7NroPEjyvUebX3zSQqQoI');
-          print(token);
-          print("tokenPrinted");
-          UpdateToken update_token = UpdateToken(FirebaseAuth.instance.currentUser!.phoneNumber!, token!);
-          update_token.sendQuery();
-          await FirebaseMessaging.instance.subscribeToTopic('analytics');
+          updateTokenAndSubscribe();
           if (authCredential.smsCode != null) {
             try {
               await FirebaseAuth.instance.signInWithCredential(authCredential);
@@ -152,13 +160,7 @@ class _OtpScreenState extends State<OtpScreen> {
                           Navigator.pushReplacementNamed(context, '/signup');
                       }
                     });
-                    FirebaseMessaging messaging = FirebaseMessaging.instance;
-                    String? token = await messaging.getToken(vapidKey: 'BKUNi4CsGSI79Tzk5156pj6GvzDCoxK-vM8xw6cjc-jnni4lWEicHPpIQLgjlxVR6a7NroPEjyvUebX3zSQqQoI');
-                    print(token);
-                    print("tokenPrinted");
-                    UpdateToken update_token = UpdateToken(FirebaseAuth.instance.currentUser!.phoneNumber!, token!);
-                    update_token.sendQuery();
-                    await FirebaseMessaging.instance.subscribeToTopic('analytics');
+                    updateTokenAndSubscribe();
                   } on FirebaseAuthException catch (e) {
                     print(e.message);
                     ScaffoldMessenger.of(context).showSnackBar(
