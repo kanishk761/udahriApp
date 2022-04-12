@@ -38,8 +38,7 @@ def signup():
         username = input["username"]
         upi_id = input["upi_id"]
     except:
-        pass
-        # return error('incorrect format')
+        return error('incorrect format')
 
     user_id = hashlib.md5(phone_no.encode()).hexdigest()
     print(user_id)
@@ -50,7 +49,35 @@ def signup():
             )
 
     session.execute(query, (user_id, phone_no, username, upi_id))
-    return {"Success": "true"}
+    
+    response = {'phone_no': phone_no, 'user_id': user_id}
+
+    dictionary = {'success' : True , 'message' : "User created successfully" , 'data' : response}
+    return jsonify(dictionary)
+
+@app.route('/update_token', methods = ["POST"])
+def updateFCMToken():
+    input = request.get_json()
+    try:
+        phone_no = input["phone_no"]
+        fcm_token = input["fcm_token"]
+    except:
+        error('incorrect format')
+
+    user_id = hashlib.md5(phone_no.encode()).hexdigest()
+
+    try:
+        query = SimpleStatement( \
+                    "INSERT INTO udhar_kharcha.fcm_mapping (user_id, fcm_token) VALUES (%s, %s)", \
+                    consistency_level = ConsistencyLevel.LOCAL_QUORUM \
+                )
+
+        session.execute(query, (user_id, fcm_token))
+        return {"Success": "true"}
+        
+    except:
+        return error('DB error')
+
 '''
 @app.route('/addUdhar', methods = ["POST"])
 def addUdhar():
@@ -167,9 +194,6 @@ def addUdhar():
     success_response = {'success' : True , 'message' : 'udhar added' , 'data' : {'display_msg' : 'udhar added'} }
     return jsonify(success_response)
 
-
-
-
 @app.route('/personal_expense', methods=["POST"])
 def personal_expense():
     input = request.get_json()
@@ -220,9 +244,6 @@ def get_personal_expenses():
     
     dictionary = {'success' : True , 'message' : "All personal expenses for input user" , 'data' : user_personal_expenses}
     return jsonify(dictionary)
-
-# print("Finished executing {} queries with a concurrency level of {} in {:.2f} seconds.".
-#       format(TOTAL_QUERIES, CONCURRENCY_LEVEL, (end-start)))
 
 if __name__ == '__main__':
     app.run(debug = True, threaded = True)

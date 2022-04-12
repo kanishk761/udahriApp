@@ -34,3 +34,9 @@ CREATE TABLE personal_expense (
     event_id text,
     PRIMARY KEY (event_id)
 );
+
+CREATE TABLE fcm_mapping (
+    user_id text,
+    fcm_token text,
+    PRIMARY KEY (user_id)
+);

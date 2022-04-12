@@ -107,3 +107,36 @@ class GetUdhar {
     }
 	}
 }
+
+class UpdateToken {
+  late String phone_no;
+  late String fcm_token;
+
+  bool success = false;
+  String message = "Network Error";
+  Map data = {};
+
+  UpdateToken(String phone_n, String fcm_t) {
+    phone_no = phone_n;
+    fcm_token = fcm_t;
+  }
+
+  Future<void> sendQuery() async {
+
+    try {
+      dynamic response = await dio.post('/update_token', data: {
+                      'phone_no': phone_no,
+                      'fcm_token': fcm_token
+                    });
+      response = response.data;//Map<String, dynamic>.from(response.data);
+      success = response['success'];
+      message = response['message'];
+      data = Map<String, dynamic>.from(response['data']);
+      print('response: '+ message);
+    }
+    catch(e) {
+      print(e);
+    }
+	}
+
+}
