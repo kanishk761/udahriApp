@@ -139,5 +139,68 @@ class UpdateToken {
       print(e);
     }
 	}
+}
 
+class AddPersonalExpense {
+  late String username;
+  late double amount;
+  late String event_name;
+
+  bool success = false;
+  String message = "Network Error";
+  Map data = {};
+
+  AddPersonalExpense(String user_n, double amt, String event_n) {
+    username = user_n;
+    amount = amt;
+    event_name = event_n;
+  }
+
+  Future<void> sendQuery() async {
+
+    try {
+      dynamic response = await dio.post('/personal_expense', data: {
+                      'username': username,
+                      'amount': amount,
+                      'event_name': event_name
+                    });
+      response = response.data;//Map<String, dynamic>.from(response.data);
+      success = response['success'];
+      message = response['message'];
+      data = Map<String, dynamic>.from(response['data']);
+      print('response: '+ message);
+    }
+    catch(e) {
+      print(e);
+    }
+	}
+}
+
+class GetPersonalExpense {
+  late String username;
+
+  bool success = false;
+  String message = "Network Error";
+  Map data = {};
+
+  GetPersonalExpense(String user_n) {
+    username = user_n;
+  }
+
+  Future<void> sendQuery() async {
+
+    try {
+      dynamic response = await dio.post('/get_personal_expense', data: {
+                      'username': username
+                    });
+      response = response.data;//Map<String, dynamic>.from(response.data);
+      success = response['success'];
+      message = response['message'];
+      data = Map<String, dynamic>.from(response['data']);
+      print('response: '+ message);
+    }
+    catch(e) {
+      print(e);
+    }
+	}
 }
