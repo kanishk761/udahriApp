@@ -1,14 +1,19 @@
 import 'package:flutter/material.dart';
 
-class U2UDetails extends StatelessWidget {
+class U2UDetails extends StatefulWidget {
   const U2UDetails({Key? key}) : super(key: key);
 
+  @override
+  State<U2UDetails> createState() => _U2UDetailsState();
+}
 
-
+class _U2UDetailsState extends State<U2UDetails> {
   @override
   Widget build(BuildContext context) {
 
     final args = ModalRoute.of(context)!.settings.arguments as Map;
+    
+    bool isApproved = false;
 
     return Scaffold(
       backgroundColor: Color(0xfff7f6fb),
@@ -68,6 +73,10 @@ class U2UDetails extends StatelessWidget {
                 SizedBox(height: 15,),
                 transactionCard(),
                 transactionCard(),
+                transactionCard(),
+                transactionCard(),
+                transactionCard(),
+                transactionCard(),
               ]
           )
       ),
@@ -81,7 +90,7 @@ class U2UDetails extends StatelessWidget {
           borderRadius: BorderRadius.circular(10),
         ),
         child: Container(
-          padding: EdgeInsets.all(15),
+          padding: EdgeInsets.fromLTRB(20, 20, 20, 10),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -116,7 +125,7 @@ class U2UDetails extends StatelessWidget {
                               child: Text('Y',
                                   style: TextStyle(color: Colors.white)
                               ),
-                              backgroundColor: Colors.redAccent
+                              backgroundColor: Colors.green
                           )
                       ),
                       Text('You'),
@@ -137,7 +146,13 @@ class U2UDetails extends StatelessWidget {
                           ),
                         ],
                       ),
-                      Text('\u{20B9} amt')
+                      Text(
+                        '\u{20B9} amt',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold
+                        ),
+                      )
                     ],
                   ),
                   Column(
@@ -160,6 +175,28 @@ class U2UDetails extends StatelessWidget {
                   ),
                 ],
               ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  TextButton(
+                      onPressed: () {},
+                      child: Text(
+                          'Approve',
+                        style: TextStyle(
+                          color: Colors.green,
+                        ),
+                      )
+                  ),
+                  TextButton(onPressed: (){},
+                    child: Text(
+                      'Reject',
+                      style: TextStyle(
+                      color: Colors.red,
+                    ),
+                  )
+                  ),
+                ],
+              )
             ],
           ),
         )

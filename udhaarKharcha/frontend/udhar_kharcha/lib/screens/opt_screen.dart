@@ -5,7 +5,6 @@ import 'package:udhar_kharcha/controllers/requests.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
@@ -25,9 +24,11 @@ class _OtpScreenState extends State<OtpScreen> {
   String _otp ='';
   bool loading = true;
 
+  static const String VAPIDKEY = 'BIEO5PrrCHAyRAu0Zn_EcZTHV1gG0MsmGUUF4PXx9SWFH5QG_ivDVCBjcYvKZMki7DvB2QYwzuEZTHsWEfUEkjw';
+
   void updateTokenAndSubscribe() async {
     FirebaseMessaging messaging = FirebaseMessaging.instance;
-    String? token = await messaging.getToken(vapidKey: 'BKUNi4CsGSI79Tzk5156pj6GvzDCoxK-vM8xw6cjc-jnni4lWEicHPpIQLgjlxVR6a7NroPEjyvUebX3zSQqQoI');
+    String? token = await messaging.getToken(vapidKey: VAPIDKEY);
     print(token);
     print("tokenPrinted");
     await FirebaseMessaging.instance.subscribeToTopic('analytics');

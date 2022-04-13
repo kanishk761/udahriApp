@@ -6,7 +6,6 @@ import 'dart:convert';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
@@ -76,8 +75,8 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
               channelDescription: channel.description,
               // TODO add a proper drawable resource to android, for now using
               //      one that already exists in example app.
-              icon: 'ic_launcher',
-              largeIcon: const DrawableResourceAndroidBitmap('ic_launcher')
+              icon: 'launch_background',
+              largeIcon: const DrawableResourceAndroidBitmap('launch_background')
             ),
           ),
         );
@@ -97,7 +96,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
   void initState() {
     super.initState();
     print('chala');
-    //handlerInitState();
+    handlerInitState();
   }
 
   @override
