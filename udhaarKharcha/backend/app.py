@@ -6,6 +6,7 @@ from cassandra.policies import WhiteListRoundRobinPolicy, DowngradingConsistency
 from cassandra.query import SimpleStatement, tuple_factory
 from cassandra import ConsistencyLevel
 import hashlib
+import min_transactions
 from datetime import datetime
 
 app = Flask(__name__)
@@ -78,33 +79,107 @@ def updateFCMToken():
     except:
         return error('DB error')
 
+
 '''
-@app.route('/addUdhar', methods = ["POST"])
-def addUdhar():
+    input format = {
+        "participants_paid" : {
+            "9315943390" : 50,
+            "9213751983" : 100,
+            "9305480656" : 30
+        },
+        "participants_amount_on_bill" : {
+            "9315943390" : 70,
+            "9213751983" : 50,
+            "9305480656" : 60
+        },
+        "event_name" : "cafe"
+    }
+
+'''
+
+@app.route('/bill_split', methods = ["POST"])
+def bill_split():
     input = request.get_json()
     try:
         participants_paid = input["participants_paid"]
-        participants_amount_on_bill = input["bill"]
+        participants_amount_on_bill = input["participants_amount_on_bill"]
         event_name = input["event_name"]
 
     except:
-        pass
-        # return error('incorrect format')
-    
+        return error('incorrect format')
+    if len(participants_paid) != len(participants_amount_on_bill) or len(participants_paid) > 14:
+        return error('incorrect format')
+
+    participants_paid_amount = 0
+    for user in participants_paid:
+        participants_paid_amount += participants_paid[user]
     bill_amount = 0
     for user in participants_amount_on_bill:
         bill_amount += participants_amount_on_bill[user]
+
+    if participants_paid_amount != bill_amount:
+        return error('inconsistant amounts')
     
-    event_time = now()
+    udhars_takers = []
+    udhar_givers = []
+    users_takers = []
+    users_givers = []
+
+    for user in participants_paid:
+        try:
+            if participants_paid[user] > participants_amount_on_bill[user]:
+                users_givers.append(user)
+                udhar_givers.append(participants_paid[user] - participants_amount_on_bill[user])
+            elif participants_paid[user] < participants_amount_on_bill[user]:
+                users_takers.append(user)
+                udhars_takers.append(participants_amount_on_bill[user] - participants_paid[user])
+        except:
+            return error('incorrect format')
+    min_transactions_for_cur_bill = min_transactions(udhars_takers, udhar_givers) #min_transactions class to compute min transactions
+    min_transactions_for_cur_bill.get_transactions()
+    udhar_givers_participants = min_transactions_for_cur_bill.final_create_udhar_giver_groups 
+    udhar_takers_participants = min_transactions_for_cur_bill.final_create_udhar_taker_groups 
+
+    pairwise_udhar = dict()
+    for i in range(udhar_givers_participants):
+        k = 0
+        for j in range(udhar_givers_participants[i]):
+            while udhar_givers[udhar_givers_participants[i][j]] > 0:
+                if udhar_givers[udhar_givers_participants[i][j]] >= udhars_takers[udhar_takers_participants[i][k]]:
+                    pairwise_udhar[(users_givers[udhar_givers_participants[i][j]], users_takers[udhar_takers_participants[i][k]])] = udhars_takers[udhar_takers_participants[i][k]]
+                    udhar_givers[udhar_givers_participants[i][j]] -= udhars_takers[udhar_takers_participants[i][k]]
+                    k += 1
+                else:
+                    pairwise_udhar[(users_givers[udhar_givers_participants[i][j]], users_takers[udhar_takers_participants[i][k]])] = udhar_givers[udhar_givers_participants[i][j]]
+                    udhars_takers[udhar_takers_participants[i][k]] -= udhar_givers[udhar_givers_participants[i][j]]
+    
+    event_time = datetime.now()
     event_id = hashlib.md5(event_time.encode()).hexdigest()
-    query = SimpleStatement('INSERT INTO udhar_kharcha.event_details (event_detail, event_id, event_participants, event_time) VALUES (%s, %s, %s, %s);', consistency_level = ConsistencyLevel.LOCAL_QUORUM)
-    session.execute(query, (event_name, event_id, participants_paid, event_time))
-    #correct the users table event_participants map
+    is_approved = [False] * len(pairwise_udhar)
+    query = SimpleStatement('INSERT INTO udhar_kharcha.event_details (event_detail, event_id, pairwise_udhar, is_approved, event_participants, event_bill, event_time) VALUES (%s, %s, %s, %s);', consistency_level = ConsistencyLevel.LOCAL_QUORUM)
+    session.execute(query, (event_name, event_id, pairwise_udhar, is_approved, participants_paid, participants_amount_on_bill, 100)) #change 100 to event time
 
-
-    amount_paid_by_each = bill_amount/len(participants_paid)
+    for user_pair in pairwise_udhar:
+        #
+        #    SEND NOTIFICATIONS TO PAIRS HERE
+        #
+        username_from = user_pair[0]
+        username_to = username_to[1]
+        try:
+            #from A to B
+            #store only records where A has to take from B
+            query = SimpleStatement("UPDATE udhar_kharcha.split_bills SET event_ids= event_ids + %s WHERE from_user_id=%s AND to_user_id=%s IF EXISTS", consistency_level = ConsistencyLevel.LOCAL_QUORUM)
+            results = session.execute(query, ([event_id], username_from, username_to))
+        except:
+            try:
+                query = SimpleStatement("INSERT INTO udhar_kharcha.split_bills (event_ids, from_user_id, to_user_id, total_amount) VALUES (%s, %s, %s, %s) IF NOT EXISTS", consistency_level = ConsistencyLevel.LOCAL_QUORUM)
+                results = session.execute(query, ([event_id], username_from, username_to, 0))
+            except:
+                return error('DB error')
     
-'''
+    success_response = {'success' : True , 'message' : 'bill_split added' , 'data' : {'display_msg' : 'bill_split added'} }
+    return jsonify(success_response)
+    
 
 
 '''
@@ -160,14 +235,11 @@ def addUdhar():
     session.execute(query, (event_name, event_id, participants_paid, 10))
 
     try:
-        print("inside")
         q = 'SELECT total_amount FROM udhar_kharcha.split_bills WHERE from_user_id = %s AND to_user_id = %s'
         r = session.execute(q, (username_from, username_to))
 
         cur_amount = r.current_rows[0][0]
         total_amount = cur_amount + amount
-
-        print("reached")
 
         #from A to B
         query = SimpleStatement("UPDATE udhar_kharcha.split_bills SET event_ids= event_ids + %s WHERE from_user_id=%s AND to_user_id=%s IF EXISTS", consistency_level = ConsistencyLevel.LOCAL_QUORUM)
@@ -186,6 +258,9 @@ def addUdhar():
         try:
             query = SimpleStatement("INSERT INTO udhar_kharcha.split_bills (event_ids, from_user_id, to_user_id, total_amount) VALUES (%s, %s, %s, %s) IF NOT EXISTS", consistency_level = ConsistencyLevel.LOCAL_QUORUM)
             results = session.execute(query, ([event_id], username_from, username_to, amount))
+
+            query = SimpleStatement("INSERT INTO udhar_kharcha.split_bills (event_ids, from_user_id, to_user_id, total_amount) VALUES (%s, %s, %s, %s) IF NOT EXISTS", consistency_level = ConsistencyLevel.LOCAL_QUORUM)
+            results = session.execute(query, ([event_id], username_to, username_from, amount))
         except:
             return error('DB error')
 
