@@ -8,23 +8,19 @@ from cassandra import ConsistencyLevel
 import hashlib
 from min_transactions import min_transactions
 from datetime import datetime
+from notification import sendTokenNotification
 
 app = Flask(__name__)
 
 ssl_context = SSLContext(PROTOCOL_TLSv1_2)
-ssl_context.load_verify_locations(r'C:\Users\saran\Desktop\csd\udahriApp\udhaarKharcha\backend\sf-class2-root.crt')
+ssl_context.load_verify_locations('/home/shubham/Desktop/Desktop/Courses/Computer-System-Design/Project/udahriApp/udhaarKharcha/backend/sf-class2-root.crt')
 ssl_context.verify_mode = CERT_REQUIRED
 auth_provider = PlainTextAuthProvider(username='Admin-at-442245796012', password='Zo2yw3zb//WD1muANf3BPM9ZhzmO2jjDCczR+NsOx/4=')
 cluster = Cluster(['cassandra.ap-south-1.amazonaws.com'], ssl_context=ssl_context, auth_provider=auth_provider, port=9142)
 session = cluster.connect()
 
-#cluster = Cluster()
-#session = cluster.connect()
-
-#session.set_keyspace('udhar_kharcha')
-
-def error(msg):
-    dictionary = {'success' : False , 'message' : msg , 'data' : {} }
+def _response(_success, _message, _data):
+    dictionary = {'success' : _success , 'message' : _message , 'data' : _data }
     return jsonify(dictionary)
 
 @app.route('/')
@@ -39,19 +35,17 @@ def signup():
         username = input["username"]
         upi_id = input["upi_id"]
     except:
-        return error('incorrect format')
+        return _response(False, 'incorrect format', '')
 
     user_id = hashlib.md5(phone_no.encode()).hexdigest()
-    print(user_id)
 
-    query = SimpleStatement( \
-                "INSERT INTO udhar_kharcha.user_profile (user_id, phone_no, username, upi_id) VALUES (%s, %s, %s, %s)", \
-                consistency_level = ConsistencyLevel.LOCAL_QUORUM \
-            )
+    query = SimpleStatement("INSERT INTO udhar_kharcha.user_profile (user_id, phone_no, username, upi_id) VALUES (%s, %s, %s, %s)", consistency_level = ConsistencyLevel.LOCAL_QUORUM)
 
     session.execute(query, (user_id, phone_no, username, upi_id))
     
     response = {'phone_no': phone_no, 'user_id': user_id}
+
+    return _response(True, "User created successfully", response)
 
     dictionary = {'success' : True , 'message' : "User created successfully" , 'data' : response}
     return jsonify(dictionary)
@@ -63,21 +57,18 @@ def updateFCMToken():
         phone_no = input["phone_no"]
         fcm_token = input["fcm_token"]
     except:
-        error('incorrect format')
+        _response(False, 'incorrect format', '')
 
     user_id = hashlib.md5(phone_no.encode()).hexdigest()
 
     try:
-        query = SimpleStatement( \
-                    "INSERT INTO udhar_kharcha.fcm_mapping (user_id, fcm_token) VALUES (%s, %s)", \
-                    consistency_level = ConsistencyLevel.LOCAL_QUORUM \
-                )
+        query = SimpleStatement("INSERT INTO udhar_kharcha.fcm_mapping (user_id, fcm_token) VALUES (%s, %s)", consistency_level = ConsistencyLevel.LOCAL_QUORUM )
 
         session.execute(query, (user_id, fcm_token))
         return {"Success": "true"}
         
     except:
-        return error('DB error')
+        return _response(False, 'DB error', '')
 
 
 '''
@@ -94,7 +85,6 @@ def updateFCMToken():
         },
         "event_name" : "cafe"
     }
-
 '''
 
 @app.route('/bill_split', methods = ["POST"])
@@ -106,9 +96,9 @@ def bill_split():
         event_name = input["event_name"]
 
     except:
-        return error('incorrect format')
+        return _response(False, 'incorrect format', '')
     if len(participants_paid) != len(participants_amount_on_bill) or len(participants_paid) > 14:
-        return error('incorrect format')
+        return _response(False, 'incorrect format', '')
 
     participants_paid_amount = 0
     for user in participants_paid:
@@ -118,7 +108,7 @@ def bill_split():
         bill_amount += participants_amount_on_bill[user]
 
     if participants_paid_amount != bill_amount:
-        return error('inconsistant amounts')
+        return _response(False, 'inconsistent amounts', '')
     
     udhars_takers = []
     udhar_givers = []
@@ -134,12 +124,11 @@ def bill_split():
                 users_takers.append(user)
                 udhars_takers.append(participants_amount_on_bill[user] - participants_paid[user])
         except:
-            return error('incorrect format')
+            return _response(False, 'incorrect format', '')
     min_transactions_for_cur_bill = min_transactions(udhars_takers, udhar_givers) #min_transactions class to compute min transactions
     min_transactions_for_cur_bill.get_transactions()
-    udhar_givers_participants = min_transactions_for_cur_bill.final_create_udhar_giver_groups 
-    udhar_takers_participants = min_transactions_for_cur_bill.final_create_udhar_taker_groups 
-
+    udhar_givers_participants = min_transactions_for_cur_bill.final_create_udhar_giver_groups
+    udhar_takers_participants = min_transactions_for_cur_bill.final_create_udhar_taker_groups
 
     pairwise_udhar = dict()
 
@@ -159,18 +148,33 @@ def bill_split():
                 try:
                     #from A to B
                     #store only records where A has to take from B
-                    query = SimpleStatement("UPDATE udhar_kharcha.split_bills SET event_ids= event_ids + %s WHERE pair_id = %s IF EXISTS", consistency_level = ConsistencyLevel.LOCAL_QUORUM)
+                    query = SimpleStatement("UPDATE udhar_kharcha.split_bills SET event_ids = event_ids + %s WHERE pair_id = %s IF EXISTS", consistency_level = ConsistencyLevel.LOCAL_QUORUM)
                     results = session.execute(query, ([event_id], pair_id))
+
+                    from_user_id = hashlib.md5(users_givers[udhar_givers_participants[i][j]].encode()).hexdigest()
+                    to_user_id = hashlib.md5(users_takers[udhar_takers_participants[i][k]].encode()).hexdigest()
+
                     query = SimpleStatement("INSERT INTO udhar_kharcha.split_bills (event_ids, from_user_id, pair_id, to_user_id, total_amount) VALUES (%s, %s, %s, %s, %s) IF NOT EXISTS", consistency_level = ConsistencyLevel.LOCAL_QUORUM)
-                    results = session.execute(query, ([event_id], users_givers[udhar_givers_participants[i][j]], pair_id, users_takers[udhar_takers_participants[i][k]], 0))
-                    print('results',results)
+                    results = session.execute(query, ([event_id], from_user_id, pair_id, to_user_id, 0))
+
+                    query = SimpleStatement("SELECT username, phone_no FROM udhar_kharcha.user_profile WHERE user_id = %s ALLOW FILTERING", consistency_level = ConsistencyLevel.LOCAL_QUORUM)
+                    result = session.execute(query, [from_user_id])
+                    result = result.one()
+                    from_user_name, from_user_phone_no = result.username, result.phone_no
+
+                    query = SimpleStatement("SELECT fcm_token FROM udhar_kharcha.fcm_mapping WHERE user_id = %s ALLOW FILTERING", consistency_level = ConsistencyLevel.LOCAL_QUORUM)
+                    result = session.execute(query, [to_user_id])
+                    result = result.one()
+                    to_fcm_token = result.fcm_token
+
+                    sendTokenNotification(to_fcm_token, from_user_name, from_user_phone_no, 30)
+
                 except:
                     '''try:
                         query = SimpleStatement("INSERT INTO udhar_kharcha.split_bills (event_ids, from_user_id, pair_id, to_user_id, total_amount) VALUES (%s, %s, %s, %s, %s) IF NOT EXISTS", consistency_level = ConsistencyLevel.LOCAL_QUORUM)
                         results = session.execute(query, ([event_id], username_from, pair_id, username_to, 0))
-                        print('hua')
                     except:'''
-                    return error('DB error')
+                    return _response(False, 'DB error', '')
 
                 #send notification HERE
                 
@@ -186,7 +190,7 @@ def bill_split():
         query = SimpleStatement('INSERT INTO udhar_kharcha.event_details (event_detail, event_id, pairwise_udhar, event_payers, event_bill, event_time) VALUES (%s, %s, %s, %s, %s, %s);', consistency_level = ConsistencyLevel.LOCAL_QUORUM)
         session.execute(query, (event_name, event_id, pairwise_udhar, participants_paid, participants_amount_on_bill, event_time)) #change 100 to event time
     except:
-        return error('DB error')
+        return _response(False, 'DB error', '')
 
     '''for user_pair in pairwise_udhar:
         #
@@ -205,14 +209,14 @@ def bill_split():
             results = session.execute(query, ([event_id], pair_id))
             query = SimpleStatement("INSERT INTO udhar_kharcha.split_bills (event_ids, from_user_id, pair_id, to_user_id, total_amount) VALUES (%s, %s, %s, %s, %s) IF NOT EXISTS", consistency_level = ConsistencyLevel.LOCAL_QUORUM)
             results = session.execute(query, ([event_id], username_from, pair_id, username_to, 0))
-            print('results',results)
         except:
             try:
                 query = SimpleStatement("INSERT INTO udhar_kharcha.split_bills (event_ids, from_user_id, pair_id, to_user_id, total_amount) VALUES (%s, %s, %s, %s, %s) IF NOT EXISTS", consistency_level = ConsistencyLevel.LOCAL_QUORUM)
                 results = session.execute(query, ([event_id], username_from, pair_id, username_to, 0))
-                print('hua')
             except:
-            return error('DB error')'''
+            return _response(False, 'DB error', '')'''
+
+    return _response(True, 'bill_split added', {'display_msg' : 'bill_split added'})
     
     success_response = {'success' : True , 'message' : 'bill_split added' , 'data' : {'display_msg' : 'bill_split added'} }
     return jsonify(success_response)
@@ -229,28 +233,33 @@ def bill_split():
 
 '''
 
+'''
 @app.route('/getUdhar', methods = ["POST"])
 def getUdhar():
     input = request.get_json()
     try:
         from_user_id = input["username_from"] #assuming these are userids
     except:
-        return error('incorrect format')
+        return _response(False, 'incorrect format', '')
     
     try:
         q = 'SELECT * FROM udhar_kharcha.split_bills WHERE from_user_id = %s ALLOW FILTERING'
         r = session.execute(q, [from_user_id])
     except:
-        return error('DB error')
+        return _response(False, 'DB error', '')
     
     user_udhars = dict()
     for each_user in r.current_rows:
         user_udhars[each_user[1]] = each_user[3]
+
+    return _response(True, "All udhar for input user", user_udhars)
     
     dictionary = {'success' : True , 'message' : "All udhar for input user" , 'data' : user_udhars}
     return jsonify(dictionary)
+'''
 
 
+'''
 @app.route('/addUdhar', methods = ["POST"])
 def addUdhar():
     input = request.get_json()
@@ -260,9 +269,7 @@ def addUdhar():
         amount = input["amount"]
         event_name = input["event_name"]
     except:
-        return error('incorrect format')
-
-    print("here")
+        return _response(False, 'incorrect format', '')
     
     participants_paid =  {str(username_from) : int(amount), str(username_to) : -int(amount)}
 
@@ -299,63 +306,129 @@ def addUdhar():
             query = SimpleStatement("INSERT INTO udhar_kharcha.split_bills (event_ids, from_user_id, to_user_id, total_amount) VALUES (%s, %s, %s, %s) IF NOT EXISTS", consistency_level = ConsistencyLevel.LOCAL_QUORUM)
             results = session.execute(query, ([event_id], username_to, username_from, amount))
         except:
-            return error('DB error')
+            return _response(False, 'DB error', '')
 
-    print("done")
+    return _response(True, 'udhar added', {'display_msg' : 'udhar added'})
     
     success_response = {'success' : True , 'message' : 'udhar added' , 'data' : {'display_msg' : 'udhar added'} }
     return jsonify(success_response)
+'''
 
 @app.route('/personal_expense', methods=["POST"])
 def personal_expense():
     input = request.get_json()
     try:
-        username = input["username"]
+        user_phone_no = input["user_phone_no"]
         amount = input["amount"]
-        event_name = input["event_name"]
+        event_detail = input["event_detail"]
     except:
-        return error('incorrect format')
+        return _response(False, 'incorrect format', '')
+
+    event_time = datetime.now()
+    event_id = hashlib.md5(event_time.strftime("%m/%d/%Y%H:%M:%S.%f").encode()).hexdigest()
+
+    user_id = hashlib.md5(user_phone_no.encode()).hexdigest()
 
     try:
-        event_time = datetime.now()
-        event_id = hashlib.md5(event_time.strftime("%m/%d/%Y%H:%M:%S.%f").encode()).hexdigest()
-        query = SimpleStatement('INSERT INTO udhar_kharcha.event_details (event_detail, event_id, event_time) VALUES (%s, %s, %s);', consistency_level = ConsistencyLevel.LOCAL_QUORUM)
-        session.execute(query, (event_name, event_id, 10))
+        query = SimpleStatement("UPDATE udhar_kharcha.personal_expenses SET event_ids = event_ids + %s WHERE user_id = %s IF EXISTS", consistency_level = ConsistencyLevel.LOCAL_QUORUM)
+        results = session.execute(query, ([event_id], user_id))
 
-        query = SimpleStatement("INSERT INTO udhar_kharcha.personal_expense (event_id, username, amount) VALUES (%s, %s, %s) IF NOT EXISTS", consistency_level = ConsistencyLevel.LOCAL_QUORUM)
-        session.execute(query, (event_id, username, amount))
-        success_response = {'success' : True , 'message' : 'Personal Expense Added', 'data': ''}
-        return jsonify(success_response)
+        query = SimpleStatement("INSERT INTO udhar_kharcha.personal_expenses (user_id, event_ids) VALUES (%s, %s) IF NOT EXISTS", consistency_level = ConsistencyLevel.LOCAL_QUORUM)
+        results = session.execute(query, (user_id, [event_id]))
+
+        query = SimpleStatement("INSERT INTO udhar_kharcha.event_details (event_id, event_bill, event_detail, event_payers, event_time) VALUES (%s, %s, %s, %s, %s) IF NOT EXISTS", consistency_level = ConsistencyLevel.LOCAL_QUORUM)
+        results = session.execute(query, (event_id, {user_phone_no: amount}, event_detail, {user_phone_no: amount}, event_time))
+
+        return _response(True, 'Personal Expense Added', '')
     except:
-        return error('DB error')
+        return _response(False, 'DB error', '')
+
+    success_response = {'success' : True , 'message' : 'Personal Expense Added', 'data': ''}
+    return jsonify(success_response)
 
 @app.route('/get_personal_expenses', methods=["POST"])
 def get_personal_expenses():
     input = request.get_json()
     try:
-        username = input["username"]
+        user_phone_no = input["user_phone_no"]
     except:
-        return error('incorrect format')
+        return _response(False, 'incorrect format', '')
+
+    user_id = hashlib.md5(user_phone_no.encode()).hexdigest()
 
     try:
-        query = 'SELECT * FROM udhar_kharcha.personal_expense WHERE username = %s ALLOW FILTERING'
-        response = session.execute(query, [username])
+        query = SimpleStatement("SELECT event_ids FROM udhar_kharcha.personal_expenses WHERE user_id = %s ALLOW FILTERING", consistency_level = ConsistencyLevel.LOCAL_QUORUM)
+        response = session.execute(query, [user_id])
     except:
-        return error('DB error')
+        return _response(False, 'DB error', '')
     
     user_personal_expenses = list()
-    query = "SELECT event_detail, event_time FROM udhar_kharcha.event_details WHERE event_id = %s ALLOW FILTERING"
-    for expense in response.current_rows:
+    query = SimpleStatement("SELECT event_detail, event_time, event_bill FROM udhar_kharcha.event_details WHERE event_id = %s ALLOW FILTERING", consistency_level = ConsistencyLevel.LOCAL_QUORUM)
+    for event_id in response.one().event_ids:
         try:
-            response = session.execute(query, [expense.event_id])
-            response = response.current_rows[0]
-            user_personal_expenses.append([response.event_detail, response.event_time, expense.amount])
+            event_response = session.execute(query, [event_id])
+            event_response = event_response.one()
+            print(dict(event_response.event_bill)[user_phone_no])
+            user_personal_expenses.append([event_response.event_detail, event_response.event_time, dict(event_response.event_bill)[user_phone_no]])
         except:
-            print("here")
             continue
+
+    return _response(True, "All personal expenses for input user", user_personal_expenses)
     
     dictionary = {'success' : True , 'message' : "All personal expenses for input user" , 'data' : user_personal_expenses}
     return jsonify(dictionary)
+
+@app.route('/event_details', methods = ["POST"])
+def event_details():
+    input = request.get_json()
+    try:
+        event_id = input["event_id"]
+    except:
+        return _response(False, 'incorrect format', '')
+
+    try:
+        query = SimpleStatement("SELECT event_bill, event_payers FROM udhar_kharcha.event_details WHERE event_id = %s ALLOW FILTERING", consistency_level = ConsistencyLevel.LOCAL_QUORUM)
+        response = session.execute(query, [event_id])
+        response = response.one()
+
+        data = {'event_bill': dict(response.event_bill), 'event_payers': dict(response.event_payers)}
+
+        dictionary = {'success' : True , 'message' : "Event details of input event" , 'data' : data}
+        return dictionary
+    except:
+        return _response(False, 'DB error', '')
+
+@app.route('/notification_details', methods=["POST"])
+def notification_details():
+    input = request.get_json()
+    try:
+        user_phone_no = input["user_phone_no"]
+        notification_title = input["notification_title"]
+        notification_body = input["notification_body"]
+    except:
+        return _response(False, 'incorrect format', '')
+
+    notification_time = datetime.now()
+    notification_id = hashlib.md5((user_phone_no+notification_time.strftime("%m/%d/%Y%H:%M:%S.%f")).encode()).hexdigest()
+
+    user_id = hashlib.md5(user_phone_no.encode()).hexdigest()
+
+    try:
+        query = SimpleStatement("UPDATE udhar_kharcha.user_notifications_mapping SET notification_ids = notification_ids + %s WHERE user_id = %s IF EXISTS", consistency_level = ConsistencyLevel.LOCAL_QUORUM)
+        results = session.execute(query, ([notification_id], user_id))
+
+        query = SimpleStatement("INSERT INTO udhar_kharcha.user_notifications_mapping (user_id, notification_ids) VALUES (%s, %s) IF NOT EXISTS", consistency_level = ConsistencyLevel.LOCAL_QUORUM)
+        results = session.execute(query, (user_id, [notification_id]))
+
+        query = SimpleStatement("INSERT INTO udhar_kharcha.notification_details (notification_id, notification_title, notification_body, notification_time) VALUES (%s, %s, %s, %s) IF NOT EXISTS", consistency_level = ConsistencyLevel.LOCAL_QUORUM)
+        results = session.execute(query, (notification_id, notification_title, notification_body, notification_time))
+
+        return _response(True, "Notification successfully added", '')
+
+        dictionary = {'success': True, 'message': "Notification successfully added", 'data': ''}
+        return jsonify(dictionary)
+    except:
+        return _response(False, 'DB error', '')
 
 if __name__ == '__main__':
     app.run(debug = True, threaded = True)
