@@ -21,8 +21,9 @@ class _HomeScreenState extends State<HomeScreen> {
       padding: const EdgeInsets.all(10),
       child: RefreshIndicator(
         onRefresh: () async{
-          GetUdhar obj = GetUdhar(_user);
+          GetUdhar obj = GetUdhar('Kanishk');
           await obj.sendQuery();
+          print(obj.data);
           await Future.delayed(Duration(seconds: 2));
         },
         child: ListView.builder(

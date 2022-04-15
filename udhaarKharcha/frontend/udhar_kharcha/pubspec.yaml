@@ -39,6 +39,8 @@ dependencies:
   firebase_messaging: ^11.2.12
   http: ^0.13.4
   flutter_local_notifications: ^9.4.0
+  flutter_emoji: ^2.4.0
+  auto_size_text_field: ^1.0.1
 
 dev_dependencies:
   flutter_test:

@@ -31,6 +31,9 @@ class min_transactions:
 
     #udhar_groups = [-1]*n
     #min_transactions = m+n
+    def get_transactions(self):
+        self.create_udhar_groups(0,0)
+
     def create_udhar_groups(self, i, limit):
         
         if i == len(self.udhars):

@@ -165,10 +165,10 @@ class AddPersonalExpense {
                       'event_name': event_name
                     });
       response = response.data;//Map<String, dynamic>.from(response.data);
-      success = response['success'];
-      message = response['message'];
-      data = Map<String, dynamic>.from(response['data']);
-      print('response: '+ message);
+      // success = response['success'];
+      // message = response['message'];
+      // data = Map<String, dynamic>.from(response['data']);
+      // print('response: '+ message);
     }
     catch(e) {
       print(e);
@@ -181,7 +181,7 @@ class GetPersonalExpense {
 
   bool success = false;
   String message = "Network Error";
-  Map data = {};
+  List data = [];
 
   GetPersonalExpense(String user_n) {
     username = user_n;
@@ -190,14 +190,14 @@ class GetPersonalExpense {
   Future<void> sendQuery() async {
 
     try {
-      dynamic response = await dio.post('/get_personal_expense', data: {
+      dynamic response = await dio.post('/get_personal_expenses', data: {
                       'username': username
                     });
       response = response.data;//Map<String, dynamic>.from(response.data);
       success = response['success'];
       message = response['message'];
-      data = Map<String, dynamic>.from(response['data']);
-      print('response: '+ message);
+      data = response['data'];
+      print(data);
     }
     catch(e) {
       print(e);
