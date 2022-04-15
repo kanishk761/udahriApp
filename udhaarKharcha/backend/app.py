@@ -1,3 +1,6 @@
+from turtle import ycor
+from unittest import result
+from urllib import response
 from flask import *
 from ssl import SSLContext, PROTOCOL_TLSv1_2 , CERT_REQUIRED
 from cassandra.auth import PlainTextAuthProvider
@@ -73,6 +76,102 @@ def updateFCMToken():
 
 '''
     input format = {
+        "user_id_from" : "9213751983",
+        "user_id_to" : "9315943390"
+    }
+
+'''
+
+@app.route('/get_pair_details', methods = ["POST"])
+def get_pair_details():
+    input = request.get_json()
+    try:
+        user_id_from = input["user_id_from"]
+        user_id_to = input["user_id_to"]
+
+    except:
+        return _response(False, 'incorrect format', '')
+    
+    response_data = []
+
+    user_id_to_user_id_from_concat = user_id_to + user_id_from
+    pair_id_user_id_to_user_id_from = hashlib.md5(user_id_to_user_id_from_concat.encode()).hexdigest()
+
+    q1 = 'SELECT event_ids FROM udhar_kharcha.split_bills WHERE pair_id = %s'
+    r1 = session.execute(q1, [pair_id_user_id_to_user_id_from])
+    events_id_take_list = r1.current_rows[0][0]
+
+
+
+    user_id_from_user_id_to_concat = user_id_from + user_id_to
+    pair_id_user_id_from_user_id_to = hashlib.md5(user_id_from_user_id_to_concat.encode()).hexdigest()
+
+    q2 = 'SELECT event_ids FROM udhar_kharcha.split_bills WHERE pair_id = %s'
+    r2 = session.execute(q2, [pair_id_user_id_from_user_id_to])
+    events_id_give_list = r2.current_rows[0][0]
+
+    i = 0
+    j = 0
+    while i < len(events_id_take_list) and j < len(events_id_give_list):
+        q1 = 'SELECT event_time FROM udhar_kharcha.event_details WHERE event_id = %s'
+        r1 = session.execute(q1, [events_id_take_list[i]])
+
+        q2 = 'SELECT event_time FROM udhar_kharcha.event_details WHERE event_id = %s'
+        r2 = session.execute(q2, [events_id_give_list[j]])
+
+        timestamp1 = r1.current_rows[0][0]
+        timestamp2 = r2.current_rows[0][0]
+
+        if(timestamp1 > timestamp2):
+            query = 'SELECT event_detail,pairwise_udhar FROM udhar_kharcha.event_details WHERE event_id = %s'
+            result = session.execute(query, [events_id_take_list[i]])
+
+            udhar_between_them = result.current_rows[0][1][pair_id_user_id_to_user_id_from]
+            event_name = result.current_rows[0][0]
+            event_data = (events_id_take_list[i], event_name, udhar_between_them, True) #final field True represents that amount has to be TAKEN
+
+            response_data.append(event_data)
+            i += 1
+        else:
+            query = 'SELECT event_detail,pairwise_udhar FROM udhar_kharcha.event_details WHERE event_id = %s'
+            result = session.execute(query, [events_id_give_list[j]])
+
+            udhar_between_them = result.current_rows[0][1][pair_id_user_id_from_user_id_to]
+            event_name = result.current_rows[0][0]
+            event_data = (events_id_give_list[j], event_name, udhar_between_them, False) #final field False represents that amount has to be GIVEN
+
+            response_data.append(event_data)
+            j += 1
+        
+    while i < len(events_id_take_list):
+        query = 'SELECT event_detail,pairwise_udhar FROM udhar_kharcha.event_details WHERE event_id = %s'
+        result = session.execute(query, [events_id_take_list[i]])
+
+        udhar_between_them = result.current_rows[0][1][pair_id_user_id_to_user_id_from]
+        event_name = result.current_rows[0][0]
+        event_data = (events_id_take_list[i], event_name, udhar_between_them, True) #final field True represents that amount has to be TAKEN
+
+        response_data.append(event_data)
+        i += 1
+
+    while j < len(events_id_give_list):
+        query = 'SELECT event_detail,pairwise_udhar FROM udhar_kharcha.event_details WHERE event_id = %s'
+        result = session.execute(query, [events_id_give_list[j]])
+
+        udhar_between_them = result.current_rows[0][1][pair_id_user_id_from_user_id_to]
+        event_name = result.current_rows[0][0]
+        event_data = (events_id_give_list[j], event_name, udhar_between_them, False) #final field False represents that amount has to be GIVEN
+
+        response_data.append(event_data)
+        j += 1
+
+    return _response(True, 'pair_details_returned', response_data)
+
+    success_response = {'success' : True , 'message' : 'pair_details_returned' , 'data' : response_data}
+    return jsonify(success_response)
+
+'''
+    input format = {
         "participants_paid" : {
             "9315943390" : 50,
             "9213751983" : 100,
@@ -127,8 +226,9 @@ def bill_split():
             return _response(False, 'incorrect format', '')
     min_transactions_for_cur_bill = min_transactions(udhars_takers, udhar_givers) #min_transactions class to compute min transactions
     min_transactions_for_cur_bill.get_transactions()
-    udhar_givers_participants = min_transactions_for_cur_bill.final_create_udhar_giver_groups
-    udhar_takers_participants = min_transactions_for_cur_bill.final_create_udhar_taker_groups
+    udhar_givers_participants = min_transactions_for_cur_bill.get_final_udhar_giver_groups() 
+    udhar_takers_participants = min_transactions_for_cur_bill.get_final_udhar_taker_groups() 
+
 
     pairwise_udhar = dict()
 
@@ -147,8 +247,8 @@ def bill_split():
 
                 try:
                     #from A to B
-                    #store only records where A has to take from B
-                    query = SimpleStatement("UPDATE udhar_kharcha.split_bills SET event_ids = event_ids + %s WHERE pair_id = %s IF EXISTS", consistency_level = ConsistencyLevel.LOCAL_QUORUM)
+                    #store only records where user_to has to take from user_from
+                    query = SimpleStatement("UPDATE udhar_kharcha.split_bills SET event_ids= event_ids + %s WHERE pair_id = %s IF EXISTS", consistency_level = ConsistencyLevel.LOCAL_QUORUM)
                     results = session.execute(query, ([event_id], pair_id))
 
                     from_user_id = hashlib.md5(users_givers[udhar_givers_participants[i][j]].encode()).hexdigest()
@@ -225,39 +325,52 @@ def bill_split():
 
 '''
     input format = {
+        "user_id" : "9315943390"
+    }
+
+'''
+
+@app.route('/getUdhars', methods = ["POST"])
+def getUdhars():
+    input = request.get_json()
+    try:
+        user_id = input["user_id"] #assuming these are userids
+    except:
+        return _response(False, 'incorrect format', '')
+    
+    try:
+        #user_id recieving money
+        q1 = 'SELECT from_user_id,total_amount FROM udhar_kharcha.split_bills WHERE to_user_id = %s ALLOW FILTERING'
+        r1 = session.execute(q1, [user_id])
+        #user_id paying money
+        q2 = 'SELECT to_user_id,total_amount FROM udhar_kharcha.split_bills WHERE from_user_id = %s ALLOW FILTERING'
+        r2 = session.execute(q2, [user_id])
+    except:
+        return _response(False, 'DB error', '')
+    
+    user_udhars = dict()
+
+    for user in r1.current_rows:
+        user_udhars[user[0]] = user[1]
+    
+    for user in r2.current_rows:
+        if user[0] in user_udhars:
+            user_udhars[user[0]] = user_udhars[user[0]] - user[1]
+        else:
+            user_udhars[user[0]] = user[1]
+
+    return _response(True, "All udhar for input user", user_udhars)
+
+    dictionary = {'success' : True , 'message' : "All udhar for input user" , 'data' : user_udhars}
+    return jsonify(dictionary)
+
+'''
+    input format = {
         "username_from" : "123",
         "username_to" : "456",
         "amount" : 100,
         "event_name" : "cafe"
     }
-
-'''
-
-'''
-@app.route('/getUdhar', methods = ["POST"])
-def getUdhar():
-    input = request.get_json()
-    try:
-        from_user_id = input["username_from"] #assuming these are userids
-    except:
-        return _response(False, 'incorrect format', '')
-    
-    try:
-        q = 'SELECT * FROM udhar_kharcha.split_bills WHERE from_user_id = %s ALLOW FILTERING'
-        r = session.execute(q, [from_user_id])
-    except:
-        return _response(False, 'DB error', '')
-    
-    user_udhars = dict()
-    for each_user in r.current_rows:
-        user_udhars[each_user[1]] = each_user[3]
-
-    return _response(True, "All udhar for input user", user_udhars)
-    
-    dictionary = {'success' : True , 'message' : "All udhar for input user" , 'data' : user_udhars}
-    return jsonify(dictionary)
-'''
-
 
 '''
 @app.route('/addUdhar', methods = ["POST"])
@@ -312,7 +425,6 @@ def addUdhar():
     
     success_response = {'success' : True , 'message' : 'udhar added' , 'data' : {'display_msg' : 'udhar added'} }
     return jsonify(success_response)
-'''
 
 @app.route('/personal_expense', methods=["POST"])
 def personal_expense():
