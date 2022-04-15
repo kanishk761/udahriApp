@@ -1,10 +1,14 @@
 class min_transactions:
     def __init__(self, udhars, udhar_givers):
-        self.udhars = udhars
-        self.udhar_givers = udhar_givers
+        if(len(udhars) > len(udhar_givers)):
+            self.udhars = udhar_givers
+            self.udhar_givers = udhars
+        else:
+            self.udhars = udhars
+            self.udhar_givers = udhar_givers
 
-        self.n = len(udhars)
-        self.m = len(udhar_givers)
+        self.n = len(self.udhars)
+        self.m = len(self.udhar_givers)
         
         self.udhar_participants = [ [] for _ in range(self.n) ]
         self.udhar_groups = [-1]*self.n
@@ -19,18 +23,18 @@ class min_transactions:
         self.final_create_udhar_taker_groups = []
         self.final_create_udhar_giver_groups = []
 
-
-    #udhar_givers = [95]
-    #udhars = [15, 5, 25, 15, 10, 5, 20]
-
-    #n = len(udhars)
-    #m = len(udhar_givers)
-
-
-    #udhar_participants = [ [] for _ in range(n) ]
-
-    #udhar_groups = [-1]*n
-    #min_transactions = m+n
+    def get_final_udhar_taker_groups(self):
+        if(len(self.udhars) > len(self.udhar_givers)):
+            return self.final_create_udhar_giver_groups
+        else:
+            return self.final_create_udhar_taker_groups
+    
+    def get_final_udhar_giver_groups(self):
+        if(len(self.udhars) > len(self.udhar_givers)):
+            return self.final_create_udhar_taker_groups
+        else:
+            return self.final_create_udhar_giver_groups
+    
     def get_transactions(self):
         self.create_udhar_groups(0,0)
 
