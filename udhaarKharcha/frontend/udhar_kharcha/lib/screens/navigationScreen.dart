@@ -6,6 +6,7 @@ import 'package:udhar_kharcha/controllers/requests.dart';
 import 'package:udhar_kharcha/screens/home_screen.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:udhar_kharcha/screens/loading.dart';
+import 'package:udhar_kharcha/screens/personal_expense.dart';
 
 
 class NavigationScreen extends StatefulWidget {
@@ -23,10 +24,11 @@ class _NavigationScreenState extends State<NavigationScreen> {
 
   // loading...
   bool homeLoading = true;
+  bool personalExpenseLoading = true;
 
   // Nav bar variables
   int _selectedNavIndex = 0;
-  final _screenName = ['Home','History','yolo'];
+  final _screenName = ['Home','Personal Expense','yolo'];
   String _screenTitle = 'Home';
 
   void _onItemTapped(int index){
@@ -41,7 +43,7 @@ class _NavigationScreenState extends State<NavigationScreen> {
       case 0:
         return homeLoading ? ShimmerLoading() : HomeScreen(persons: persons);
       case 1:
-        return Center(child: Text('Second'),);
+        return personalExpenseLoading ? ShimmerLoading() : PersonalExpenseScreen(expenses: expenses,);
       default:
         return Center(child: Text('Third'),);
     }
@@ -64,10 +66,33 @@ class _NavigationScreenState extends State<NavigationScreen> {
     print(persons);
   }
 
+
+
+  // get personal expenses
+  List expenses = [];  // List of lists of 3
+  getPersonalExpense() async{
+    try {
+      setState(() {
+        personalExpenseLoading = true;
+      });
+      GetPersonalExpense obj = GetPersonalExpense(_phoneNumber);
+      await obj.sendQuery();
+      setState(() {
+        expenses = obj.data;
+        personalExpenseLoading = false;
+      });
+    }
+    catch (e) {
+      print('Failed to get personal expense');
+    }
+  }
+
+
   @override
   void initState() {
     super.initState();
     getUdharData();
+    getPersonalExpense();
   }
 
   @override
@@ -139,8 +164,8 @@ class _NavigationScreenState extends State<NavigationScreen> {
             label: 'Home',
           ),
           BottomNavigationBarItem(
-              icon: Icon(Icons.history),
-              label: 'History'
+              icon: Icon(Icons.payment_rounded),
+              label: 'Personal'
           ),
           BottomNavigationBarItem(
               icon: Icon(Icons.search),
@@ -152,14 +177,23 @@ class _NavigationScreenState extends State<NavigationScreen> {
         onTap: _onItemTapped,
       ),
 
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () async{
-          await Navigator.pushNamed(context, '/add');
-          getUdharData();
-        },
-        label: const Text('Add Udhaar'),
-        icon: const Icon(Icons.add),
-      ),
+      floatingActionButton: _selectedNavIndex == 1 ?
+        FloatingActionButton.extended(
+          onPressed: () async{
+            await Navigator.pushNamed(context, '/addPersonal');
+            getPersonalExpense();
+          },
+          label: const Text('Add Personal Expense'),
+          icon: const Icon(Icons.add),
+        ) :
+        FloatingActionButton.extended(
+          onPressed: () async{
+            await Navigator.pushNamed(context, '/add');
+            getUdharData();
+          },
+          label: const Text('Add Udhaar'),
+          icon: const Icon(Icons.add),
+        ),
     );
   }
 

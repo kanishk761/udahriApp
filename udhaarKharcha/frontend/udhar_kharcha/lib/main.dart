@@ -2,9 +2,12 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:udhar_kharcha/screens/addDebt_screen.dart';
+import 'package:udhar_kharcha/screens/addPersonalExpense_screen.dart';
 import 'package:udhar_kharcha/screens/details_screen.dart';
 import 'package:udhar_kharcha/screens/navigationScreen.dart';
 import 'package:udhar_kharcha/screens/login_screen.dart';
+import 'package:udhar_kharcha/screens/newAddDebt.dart';
+import 'package:udhar_kharcha/screens/personal_expense.dart';
 import 'package:udhar_kharcha/screens/signup_screen.dart';
 import 'package:udhar_kharcha/screens/welcome.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -49,9 +52,10 @@ class MyApp extends StatelessWidget {
         '/login' : (context) => Login(),
         '/signup' : (context) => SignupScreen(),
         '/home' : (context) => NavigationScreen(),
-        '/add' : (context) => AddDebtScreen(),
+        '/add' : (context) => SplitBillsScreen(),
         '/details' : (context) => U2UDetails(),
         '/notify' : (context) => NotificationScreen(),
+        '/addPersonal' : (context) => AddPersonalExpenseScreen(),
       },
     );
   }
