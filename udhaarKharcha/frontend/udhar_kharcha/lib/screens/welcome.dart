@@ -23,27 +23,39 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
   late FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin;
   late AndroidNotificationChannel channel;
 
-  AndroidInitializationSettings initializationSettingsAndroid = const AndroidInitializationSettings('sample_large_icon');
-
   void handleMessage(RemoteMessage message) {
     print(message.data);
-    // if(message.notification?.android?.clickAction == 'launch_analytics_page') {
-    //   Navigator.pushNamed(context, '/add');
-    // }
-  }
-
-  Future<void> _initializeMessage() async {
-    RemoteMessage? initialMessage = await FirebaseMessaging.instance.getInitialMessage();
-
-    if(initialMessage != null) {
-      handleMessage(initialMessage);
+    if(message.data["screen"] == 'launch_analytics_page') {
+      print("yes, I am changing screen");
+      Navigator.pushNamed(context, '/notify');
     }
-
-    FirebaseMessaging.onMessageOpenedApp.listen(handleMessage);
   }
+
+  // Future<void> _initializeMessage() async {
+  //   RemoteMessage? initialMessage = await FirebaseMessaging.instance.getInitialMessage();
+
+  //   if(initialMessage != null) {
+  //     handleMessage(initialMessage);
+  //   }
+
+  //   FirebaseMessaging.onMessageOpenedApp.listen(handleMessage);
+  // }
+
+  // Future<void> selectNotification(String? payload) async {
+  //   if (payload != null) {
+  //     print('notification payload:');
+  //     print(payload);
+  //     print("select notification");
+  //     // navigatorKey.currentState?.pushNamed('/add');
+  //     Navigator.pushNamed(context, '/notify');
+  //     print("ye");
+  //   }
+  //   else
+  //     print("received null");
+  // }
 
   Future<void> handlerInitState() async {
-    _initializeMessage();
+    // _initializeMessage();
 
     channel = const AndroidNotificationChannel(
       'high_importance_channel', // id
@@ -51,6 +63,15 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
       description: 'This channel is used for important notifications.', // description
       importance: Importance.high,
     );
+
+    // var initialzationSettingsAndroid =
+    // AndroidInitializationSettings('@mipmap/ic_launcher');
+    // var initializationSettings =
+    // InitializationSettings(android: initialzationSettingsAndroid);
+    // flutterLocalNotificationsPlugin.initialize(initializationSettings);
+
+    // await flutterLocalNotificationsPlugin.initialize(initializationSettings,
+    //     onSelectNotification: selectNotification);
 
     flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
 
@@ -64,6 +85,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
       AndroidNotification? android = message.notification?.android;
       if (notification != null && android != null && !kIsWeb) {
         print("hello");
+        print("I am in foreground");
         flutterLocalNotificationsPlugin.show(
           notification.hashCode,
           notification.title,
@@ -84,11 +106,12 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
       handleMessage(message);
     });
 
-    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
-      print(message.notification);
-      print(message.data);
-      print("I am here");
-    });
+    // FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+    //   print(message.notification);
+    //   print(message.data);
+    //   print("I am here");
+    //   handleMessage(message);
+    // });
   }
 
 

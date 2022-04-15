@@ -3,7 +3,7 @@ import firebase_admin
 from firebase_admin import credentials, messaging
 
 def sendNotification(token, user_from, amount):
-    credential = credentials.Certificate(r'C:\Users\saran\Desktop\csd\udahriApp\udhaarKharcha\backend\firebase.json')
+    credential = credentials.Certificate('/home/shubham/Desktop/Desktop/Courses/Computer-System-Design/Project/udahriApp/udhaarKharcha/backend/firebase.json')
     firebase_admin.initialize_app(credential)
 
     registration_token = 'cb_LxhqxQGGbyA3wSO4_0D:APA91bG5vJrNxEunpmY09eoQtgFYjL8ClomYRyuqC9AIJBZxbhPlp8pvqYT9qKGWtLDHnlabjyzNzJRi5VWeE5RSQr2bvBLZ56yL9gi7V8Djao3qxbe8vTzmVfZUm4E3i5H7aT4uH0-Z'
@@ -19,7 +19,7 @@ def sendNotification(token, user_from, amount):
     message = messaging.Message(
         topic=topic, 
         data={
-            'route': 'home'
+            'screen': 'launch_analytics_page'
         }, 
         android=messaging.AndroidConfig(
             priority='high',
