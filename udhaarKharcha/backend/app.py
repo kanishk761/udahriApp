@@ -156,7 +156,7 @@ def bill_split():
     event_time = datetime.now()
     event_id = hashlib.md5(event_time.encode()).hexdigest()
     is_approved = [False] * len(pairwise_udhar)
-    query = SimpleStatement('INSERT INTO udhar_kharcha.event_details (event_detail, event_id, pairwise_udhar, is_approved, event_participants, event_bill, event_time) VALUES (%s, %s, %s, %s);', consistency_level = ConsistencyLevel.LOCAL_QUORUM)
+    query = SimpleStatement('INSERT INTO udhar_kharcha.event_details (event_detail, event_id, pairwise_udhar, is_approved, event_payers, event_bill, event_time) VALUES (%s, %s, %s, %s);', consistency_level = ConsistencyLevel.LOCAL_QUORUM)
     session.execute(query, (event_name, event_id, pairwise_udhar, is_approved, participants_paid, participants_amount_on_bill, 100)) #change 100 to event time
 
     for user_pair in pairwise_udhar:
