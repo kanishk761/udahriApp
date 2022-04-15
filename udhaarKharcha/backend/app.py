@@ -145,19 +145,22 @@ def bill_split():
         k = 0
         for j in range(udhar_givers_participants[i]):
             while udhar_givers[udhar_givers_participants[i][j]] > 0:
+
+                user_to_user_from_concat = users_givers[udhar_givers_participants[i][j]] + users_takers[udhar_takers_participants[i][k]]
+                pair_id = hashlib.md5(user_to_user_from_concat.encode()).hexdigest()
+
                 if udhar_givers[udhar_givers_participants[i][j]] >= udhars_takers[udhar_takers_participants[i][k]]:
-                    pairwise_udhar[(users_givers[udhar_givers_participants[i][j]], users_takers[udhar_takers_participants[i][k]])] = udhars_takers[udhar_takers_participants[i][k]]
+                    pairwise_udhar[pair_id] = -udhars_takers[udhar_takers_participants[i][k]]
                     udhar_givers[udhar_givers_participants[i][j]] -= udhars_takers[udhar_takers_participants[i][k]]
                     k += 1
                 else:
-                    pairwise_udhar[(users_givers[udhar_givers_participants[i][j]], users_takers[udhar_takers_participants[i][k]])] = udhar_givers[udhar_givers_participants[i][j]]
+                    pairwise_udhar[pair_id] = -udhar_givers[udhar_givers_participants[i][j]]
                     udhars_takers[udhar_takers_participants[i][k]] -= udhar_givers[udhar_givers_participants[i][j]]
     
     event_time = datetime.now()
     event_id = hashlib.md5(event_time.encode()).hexdigest()
-    is_approved = [False] * len(pairwise_udhar)
-    query = SimpleStatement('INSERT INTO udhar_kharcha.event_details (event_detail, event_id, pairwise_udhar, is_approved, event_participants, event_bill, event_time) VALUES (%s, %s, %s, %s);', consistency_level = ConsistencyLevel.LOCAL_QUORUM)
-    session.execute(query, (event_name, event_id, pairwise_udhar, is_approved, participants_paid, participants_amount_on_bill, 100)) #change 100 to event time
+    query = SimpleStatement('INSERT INTO udhar_kharcha.event_details (event_detail, event_id, pairwise_udhar, event_payers, event_bill, event_time) VALUES (%s, %s, %s, %s);', consistency_level = ConsistencyLevel.LOCAL_QUORUM)
+    session.execute(query, (event_name, event_id, pairwise_udhar, participants_paid, participants_amount_on_bill, 100)) #change 100 to event time
 
     for user_pair in pairwise_udhar:
         #
@@ -165,15 +168,19 @@ def bill_split():
         #
         username_from = user_pair[0]
         username_to = username_to[1]
+
+        user_to_user_from_concat = users_givers[udhar_givers_participants[i][j]] + users_takers[udhar_takers_participants[i][k]]
+        pair_id = hashlib.md5(user_to_user_from_concat.encode()).hexdigest()
+
         try:
             #from A to B
             #store only records where A has to take from B
-            query = SimpleStatement("UPDATE udhar_kharcha.split_bills SET event_ids= event_ids + %s WHERE from_user_id=%s AND to_user_id=%s IF EXISTS", consistency_level = ConsistencyLevel.LOCAL_QUORUM)
-            results = session.execute(query, ([event_id], username_from, username_to))
+            query = SimpleStatement("UPDATE udhar_kharcha.split_bills SET event_ids= event_ids + %s WHERE pair_id = %s IF EXISTS", consistency_level = ConsistencyLevel.LOCAL_QUORUM)
+            results = session.execute(query, ([event_id], pair_id))
         except:
             try:
-                query = SimpleStatement("INSERT INTO udhar_kharcha.split_bills (event_ids, from_user_id, to_user_id, total_amount) VALUES (%s, %s, %s, %s) IF NOT EXISTS", consistency_level = ConsistencyLevel.LOCAL_QUORUM)
-                results = session.execute(query, ([event_id], username_from, username_to, 0))
+                query = SimpleStatement("INSERT INTO udhar_kharcha.split_bills (event_ids, from_user_id, pair_id, to_user_id, total_amount) VALUES (%s, %s, %s, %s) IF NOT EXISTS", consistency_level = ConsistencyLevel.LOCAL_QUORUM)
+                results = session.execute(query, ([event_id], username_from, pair_id, username_to, 0))
             except:
                 return error('DB error')
     
