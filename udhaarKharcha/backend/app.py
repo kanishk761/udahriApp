@@ -6,7 +6,7 @@ from cassandra.policies import WhiteListRoundRobinPolicy, DowngradingConsistency
 from cassandra.query import SimpleStatement, tuple_factory
 from cassandra import ConsistencyLevel
 import hashlib
-import min_transactions
+from min_transactions import min_transactions
 from datetime import datetime
 
 app = Flask(__name__)
@@ -140,15 +140,40 @@ def bill_split():
     udhar_givers_participants = min_transactions_for_cur_bill.final_create_udhar_giver_groups 
     udhar_takers_participants = min_transactions_for_cur_bill.final_create_udhar_taker_groups 
 
-    pairwise_udhar = dict()
-    for i in range(udhar_givers_participants):
-        k = 0
-        for j in range(udhar_givers_participants[i]):
-            while udhar_givers[udhar_givers_participants[i][j]] > 0:
 
-                user_to_user_from_concat = users_givers[udhar_givers_participants[i][j]] + users_takers[udhar_takers_participants[i][k]]
+    pairwise_udhar = dict()
+
+    event_time = datetime.now()
+    event_id = hashlib.md5(event_time.strftime("%m/%d/%Y%H:%M:%S.%f").encode()).hexdigest()
+
+    for i in range(len(udhar_givers_participants)):
+        k = 0
+        for j in range(len(udhar_givers_participants[i])):
+            while udhar_givers[udhar_givers_participants[i][j]] > 0:
+                user_to = users_givers[udhar_givers_participants[i][j]]
+                user_from = users_takers[udhar_takers_participants[i][k]]
+
+                user_to_user_from_concat = user_to + user_from
                 pair_id = hashlib.md5(user_to_user_from_concat.encode()).hexdigest()
 
+                try:
+                    #from A to B
+                    #store only records where A has to take from B
+                    query = SimpleStatement("UPDATE udhar_kharcha.split_bills SET event_ids= event_ids + %s WHERE pair_id = %s IF EXISTS", consistency_level = ConsistencyLevel.LOCAL_QUORUM)
+                    results = session.execute(query, ([event_id], pair_id))
+                    query = SimpleStatement("INSERT INTO udhar_kharcha.split_bills (event_ids, from_user_id, pair_id, to_user_id, total_amount) VALUES (%s, %s, %s, %s, %s) IF NOT EXISTS", consistency_level = ConsistencyLevel.LOCAL_QUORUM)
+                    results = session.execute(query, ([event_id], users_givers[udhar_givers_participants[i][j]], pair_id, users_takers[udhar_takers_participants[i][k]], 0))
+                    print('results',results)
+                except:
+                    '''try:
+                        query = SimpleStatement("INSERT INTO udhar_kharcha.split_bills (event_ids, from_user_id, pair_id, to_user_id, total_amount) VALUES (%s, %s, %s, %s, %s) IF NOT EXISTS", consistency_level = ConsistencyLevel.LOCAL_QUORUM)
+                        results = session.execute(query, ([event_id], username_from, pair_id, username_to, 0))
+                        print('hua')
+                    except:'''
+                    return error('DB error')
+
+                #send notification HERE
+                
                 if udhar_givers[udhar_givers_participants[i][j]] >= udhars_takers[udhar_takers_participants[i][k]]:
                     pairwise_udhar[pair_id] = -udhars_takers[udhar_takers_participants[i][k]]
                     udhar_givers[udhar_givers_participants[i][j]] -= udhars_takers[udhar_takers_participants[i][k]]
@@ -157,19 +182,20 @@ def bill_split():
                     pairwise_udhar[pair_id] = -udhar_givers[udhar_givers_participants[i][j]]
                     udhars_takers[udhar_takers_participants[i][k]] -= udhar_givers[udhar_givers_participants[i][j]]
     
-    event_time = datetime.now()
-    event_id = hashlib.md5(event_time.encode()).hexdigest()
-    query = SimpleStatement('INSERT INTO udhar_kharcha.event_details (event_detail, event_id, pairwise_udhar, event_payers, event_bill, event_time) VALUES (%s, %s, %s, %s);', consistency_level = ConsistencyLevel.LOCAL_QUORUM)
-    session.execute(query, (event_name, event_id, pairwise_udhar, participants_paid, participants_amount_on_bill, 100)) #change 100 to event time
+    try:
+        query = SimpleStatement('INSERT INTO udhar_kharcha.event_details (event_detail, event_id, pairwise_udhar, event_payers, event_bill, event_time) VALUES (%s, %s, %s, %s, %s, %s);', consistency_level = ConsistencyLevel.LOCAL_QUORUM)
+        session.execute(query, (event_name, event_id, pairwise_udhar, participants_paid, participants_amount_on_bill, event_time)) #change 100 to event time
+    except:
+        return error('DB error')
 
-    for user_pair in pairwise_udhar:
+    '''for user_pair in pairwise_udhar:
         #
         #    SEND NOTIFICATIONS TO PAIRS HERE
         #
         username_from = user_pair[0]
-        username_to = username_to[1]
+        username_to = user_pair[1]
 
-        user_to_user_from_concat = users_givers[udhar_givers_participants[i][j]] + users_takers[udhar_takers_participants[i][k]]
+        user_to_user_from_concat = username_from + username_to
         pair_id = hashlib.md5(user_to_user_from_concat.encode()).hexdigest()
 
         try:
@@ -177,12 +203,16 @@ def bill_split():
             #store only records where A has to take from B
             query = SimpleStatement("UPDATE udhar_kharcha.split_bills SET event_ids= event_ids + %s WHERE pair_id = %s IF EXISTS", consistency_level = ConsistencyLevel.LOCAL_QUORUM)
             results = session.execute(query, ([event_id], pair_id))
+            query = SimpleStatement("INSERT INTO udhar_kharcha.split_bills (event_ids, from_user_id, pair_id, to_user_id, total_amount) VALUES (%s, %s, %s, %s, %s) IF NOT EXISTS", consistency_level = ConsistencyLevel.LOCAL_QUORUM)
+            results = session.execute(query, ([event_id], username_from, pair_id, username_to, 0))
+            print('results',results)
         except:
             try:
-                query = SimpleStatement("INSERT INTO udhar_kharcha.split_bills (event_ids, from_user_id, pair_id, to_user_id, total_amount) VALUES (%s, %s, %s, %s) IF NOT EXISTS", consistency_level = ConsistencyLevel.LOCAL_QUORUM)
+                query = SimpleStatement("INSERT INTO udhar_kharcha.split_bills (event_ids, from_user_id, pair_id, to_user_id, total_amount) VALUES (%s, %s, %s, %s, %s) IF NOT EXISTS", consistency_level = ConsistencyLevel.LOCAL_QUORUM)
                 results = session.execute(query, ([event_id], username_from, pair_id, username_to, 0))
+                print('hua')
             except:
-                return error('DB error')
+            return error('DB error')'''
     
     success_response = {'success' : True , 'message' : 'bill_split added' , 'data' : {'display_msg' : 'bill_split added'} }
     return jsonify(success_response)
