@@ -30,6 +30,8 @@ def _response(_success, _message, _data):
 def home():
     return 'Home'
 
+
+
 @app.route('/signup', methods = ["POST"])
 def signup():
     input = request.get_json()
@@ -50,8 +52,7 @@ def signup():
 
     return _response(True, "User created successfully", response)
 
-    dictionary = {'success' : True , 'message' : "User created successfully" , 'data' : response}
-    return jsonify(dictionary)
+
 
 @app.route('/update_token', methods = ["POST"])
 def updateFCMToken():
@@ -72,6 +73,7 @@ def updateFCMToken():
         
     except:
         return _response(False, 'DB error', '')
+
 
 
 '''
@@ -167,8 +169,7 @@ def get_pair_details():
 
     return _response(True, 'pair_details_returned', response_data)
 
-    success_response = {'success' : True , 'message' : 'pair_details_returned' , 'data' : response_data}
-    return jsonify(success_response)
+
 
 '''
     input format = {
@@ -270,13 +271,7 @@ def bill_split():
                     sendTokenNotification(to_fcm_token, from_user_name, from_user_phone_no, 30)
 
                 except:
-                    '''try:
-                        query = SimpleStatement("INSERT INTO udhar_kharcha.split_bills (event_ids, from_user_id, pair_id, to_user_id, total_amount) VALUES (%s, %s, %s, %s, %s) IF NOT EXISTS", consistency_level = ConsistencyLevel.LOCAL_QUORUM)
-                        results = session.execute(query, ([event_id], username_from, pair_id, username_to, 0))
-                    except:'''
                     return _response(False, 'DB error', '')
-
-                #send notification HERE
                 
                 if udhar_givers[udhar_givers_participants[i][j]] >= udhars_takers[udhar_takers_participants[i][k]]:
                     pairwise_udhar[pair_id] = -udhars_takers[udhar_takers_participants[i][k]]
@@ -292,34 +287,7 @@ def bill_split():
     except:
         return _response(False, 'DB error', '')
 
-    '''for user_pair in pairwise_udhar:
-        #
-        #    SEND NOTIFICATIONS TO PAIRS HERE
-        #
-        username_from = user_pair[0]
-        username_to = user_pair[1]
-
-        user_to_user_from_concat = username_from + username_to
-        pair_id = hashlib.md5(user_to_user_from_concat.encode()).hexdigest()
-
-        try:
-            #from A to B
-            #store only records where A has to take from B
-            query = SimpleStatement("UPDATE udhar_kharcha.split_bills SET event_ids= event_ids + %s WHERE pair_id = %s IF EXISTS", consistency_level = ConsistencyLevel.LOCAL_QUORUM)
-            results = session.execute(query, ([event_id], pair_id))
-            query = SimpleStatement("INSERT INTO udhar_kharcha.split_bills (event_ids, from_user_id, pair_id, to_user_id, total_amount) VALUES (%s, %s, %s, %s, %s) IF NOT EXISTS", consistency_level = ConsistencyLevel.LOCAL_QUORUM)
-            results = session.execute(query, ([event_id], username_from, pair_id, username_to, 0))
-        except:
-            try:
-                query = SimpleStatement("INSERT INTO udhar_kharcha.split_bills (event_ids, from_user_id, pair_id, to_user_id, total_amount) VALUES (%s, %s, %s, %s, %s) IF NOT EXISTS", consistency_level = ConsistencyLevel.LOCAL_QUORUM)
-                results = session.execute(query, ([event_id], username_from, pair_id, username_to, 0))
-            except:
-            return _response(False, 'DB error', '')'''
-
     return _response(True, 'bill_split added', {'display_msg' : 'bill_split added'})
-    
-    success_response = {'success' : True , 'message' : 'bill_split added' , 'data' : {'display_msg' : 'bill_split added'} }
-    return jsonify(success_response)
     
 
 
@@ -330,13 +298,15 @@ def bill_split():
 
 '''
 
-@app.route('/getUdhars', methods = ["POST"])
+@app.route('/get_udhars', methods = ["POST"])
 def getUdhars():
     input = request.get_json()
     try:
-        user_id = input["user_id"] #assuming these are userids
+        user_phone_no = input["user_phone_no"] #assuming these are userids
     except:
         return _response(False, 'incorrect format', '')
+
+    user_id = hashlib.md5(user_phone_no.encode()).hexdigest()
     
     try:
         #user_id recieving money
@@ -361,70 +331,7 @@ def getUdhars():
 
     return _response(True, "All udhar for input user", user_udhars)
 
-    dictionary = {'success' : True , 'message' : "All udhar for input user" , 'data' : user_udhars}
-    return jsonify(dictionary)
 
-'''
-    input format = {
-        "username_from" : "123",
-        "username_to" : "456",
-        "amount" : 100,
-        "event_name" : "cafe"
-    }
-
-'''
-@app.route('/addUdhar', methods = ["POST"])
-def addUdhar():
-    input = request.get_json()
-    try:
-        username_from = input["username_from"] #assuming these are userids
-        username_to = input["username_to"]
-        amount = input["amount"]
-        event_name = input["event_name"]
-    except:
-        return _response(False, 'incorrect format', '')
-    
-    participants_paid =  {str(username_from) : int(amount), str(username_to) : -int(amount)}
-
-    event_time = datetime.now()
-    event_id = hashlib.md5(event_time.strftime("%m/%d/%Y%H:%M:%S.%f").encode()).hexdigest()
-    query = SimpleStatement('INSERT INTO udhar_kharcha.event_details (event_detail, event_id, event_participants, event_time) VALUES (%s, %s, %s, %s);', consistency_level = ConsistencyLevel.LOCAL_QUORUM)
-    session.execute(query, (event_name, event_id, participants_paid, 10))
-
-    try:
-        q = 'SELECT total_amount FROM udhar_kharcha.split_bills WHERE from_user_id = %s AND to_user_id = %s'
-        r = session.execute(q, (username_from, username_to))
-
-        cur_amount = r.current_rows[0][0]
-        total_amount = cur_amount + amount
-
-        #from A to B
-        query = SimpleStatement("UPDATE udhar_kharcha.split_bills SET event_ids= event_ids + %s WHERE from_user_id=%s AND to_user_id=%s IF EXISTS", consistency_level = ConsistencyLevel.LOCAL_QUORUM)
-        results = session.execute(query, ([event_id], username_from, username_to))
-
-        query = SimpleStatement("UPDATE udhar_kharcha.split_bills SET total_amount = %s WHERE from_user_id=%s AND to_user_id=%s IF EXISTS", consistency_level = ConsistencyLevel.LOCAL_QUORUM)
-        results = session.execute(query, (total_amount, username_from, username_to))
-
-        #from B to A
-        query = SimpleStatement("UPDATE udhar_kharcha.split_bills SET event_ids= event_ids + %s WHERE from_user_id=%s AND to_user_id=%s IF EXISTS", consistency_level = ConsistencyLevel.LOCAL_QUORUM)
-        results = session.execute(query, ([event_id], username_to, username_from))
-
-        query = SimpleStatement("UPDATE udhar_kharcha.split_bills SET total_amount = %s WHERE from_user_id=%s AND to_user_id=%s IF EXISTS", consistency_level = ConsistencyLevel.LOCAL_QUORUM)
-        results = session.execute(query, (total_amount, username_to, username_from))
-    except:
-        try:
-            query = SimpleStatement("INSERT INTO udhar_kharcha.split_bills (event_ids, from_user_id, to_user_id, total_amount) VALUES (%s, %s, %s, %s) IF NOT EXISTS", consistency_level = ConsistencyLevel.LOCAL_QUORUM)
-            results = session.execute(query, ([event_id], username_from, username_to, amount))
-
-            query = SimpleStatement("INSERT INTO udhar_kharcha.split_bills (event_ids, from_user_id, to_user_id, total_amount) VALUES (%s, %s, %s, %s) IF NOT EXISTS", consistency_level = ConsistencyLevel.LOCAL_QUORUM)
-            results = session.execute(query, ([event_id], username_to, username_from, amount))
-        except:
-            return _response(False, 'DB error', '')
-
-    return _response(True, 'udhar added', {'display_msg' : 'udhar added'})
-    
-    success_response = {'success' : True , 'message' : 'udhar added' , 'data' : {'display_msg' : 'udhar added'} }
-    return jsonify(success_response)
 
 @app.route('/personal_expense', methods=["POST"])
 def personal_expense():
@@ -455,8 +362,7 @@ def personal_expense():
     except:
         return _response(False, 'DB error', '')
 
-    success_response = {'success' : True , 'message' : 'Personal Expense Added', 'data': ''}
-    return jsonify(success_response)
+
 
 @app.route('/get_personal_expenses', methods=["POST"])
 def get_personal_expenses():
@@ -486,9 +392,8 @@ def get_personal_expenses():
             continue
 
     return _response(True, "All personal expenses for input user", user_personal_expenses)
-    
-    dictionary = {'success' : True , 'message' : "All personal expenses for input user" , 'data' : user_personal_expenses}
-    return jsonify(dictionary)
+
+
 
 @app.route('/event_details', methods = ["POST"])
 def event_details():
@@ -509,6 +414,8 @@ def event_details():
         return dictionary
     except:
         return _response(False, 'DB error', '')
+
+
 
 @app.route('/notification_details', methods=["POST"])
 def notification_details():
@@ -536,11 +443,10 @@ def notification_details():
         results = session.execute(query, (notification_id, notification_title, notification_body, notification_time))
 
         return _response(True, "Notification successfully added", '')
-
-        dictionary = {'success': True, 'message': "Notification successfully added", 'data': ''}
-        return jsonify(dictionary)
     except:
         return _response(False, 'DB error', '')
+
+        
 
 if __name__ == '__main__':
     app.run(debug = True, threaded = True)
