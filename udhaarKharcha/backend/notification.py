@@ -5,12 +5,7 @@ from firebase_admin import credentials, messaging
 credential = credentials.Certificate('/home/shubham/Desktop/Desktop/Courses/Computer-System-Design/Project/udahriApp/udhaarKharcha/backend/firebase.json')
 firebase_admin.initialize_app(credential)
 
-def sendTokenNotification(fcm_token, user_from_name, user_from_phone_no, amount):
-
-    title = 'New Debt'
-    body = '{0} - {1} requested you to pay {2}'.format(user_from_name, user_from_phone_no, str(amount))
-    image = 'https://aseemrastogi2.files.wordpress.com/2014/01/debt-management.jpg'
-
+def sendTokenNotification(fcm_token, title, body, image = None):
     message = messaging.Message(
         token=fcm_token,
         android=messaging.AndroidConfig(
@@ -27,15 +22,14 @@ def sendTokenNotification(fcm_token, user_from_name, user_from_phone_no, amount)
             'route': 'login'
         }
     )
-
     response = messaging.send(message)
     print('Successfully sent message:', response)
 
-def sendTopicNotification(user_from_name, user_from_phone_no, amount, topic = 'analytics'):
+def sendTopicNotification(topic = 'analytics'):
 
-    title = 'New Debt'
-    body = '{0} - {1} requested you to pay {2}'.format(user_from_name, user_from_phone_no, str(amount))
-    image = 'https://aseemrastogi2.files.wordpress.com/2014/01/debt-management.jpg'
+    title = 'Check your Analyses'
+    body = 'Your analytics for previous month is ready \n Tap to view'
+    # image = 'https://aseemrastogi2.files.wordpress.com/2014/01/debt-management.jpg'
 
     message = messaging.Message(
         topic=topic, 
@@ -47,7 +41,7 @@ def sendTopicNotification(user_from_name, user_from_phone_no, amount, topic = 'a
             notification=messaging.AndroidNotification(
                 title=title,
                 body=body,
-                image=image,
+                # image=image,
                 color='#f45342',
                 click_action='FLUTTER_NOTIFICATION_CLICK'
             )
@@ -56,3 +50,5 @@ def sendTopicNotification(user_from_name, user_from_phone_no, amount, topic = 'a
 
     response = messaging.send(message)
     print('Successfully sent message:', response)
+
+sendTopicNotification()

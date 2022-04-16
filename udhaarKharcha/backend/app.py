@@ -31,6 +31,12 @@ def home():
     return 'Home'
 
 
+@app.route('/delete')
+def delete():
+    query = SimpleStatement("TRUNCATE udhar_kharcha.fcm_mapping")
+    session.execute(query)
+
+
 
 @app.route('/signup', methods = ["POST"])
 def signup():
@@ -82,6 +88,8 @@ def updateFCMToken():
         "user_id_to" : "9315943390"
     }
 
+    to ka device, from pe tap
+
 '''
 
 @app.route('/get_pair_details', methods = ["POST"])
@@ -126,9 +134,12 @@ def get_pair_details():
         q1 = 'SELECT event_time FROM udhar_kharcha.event_details WHERE event_id = %s'
         r1 = session.execute(q1, [events_id_take_list[i]])
 
+        print(events_id_give_list[i])
+
         q2 = 'SELECT event_time FROM udhar_kharcha.event_details WHERE event_id = %s'
         r2 = session.execute(q2, [events_id_give_list[j]])
 
+        print(len(r1.current_rows))
         timestamp1 = r1.current_rows[0][0]
         timestamp2 = r2.current_rows[0][0]
 
@@ -198,6 +209,8 @@ def approve_udhar():
     
     pair_concat = user_phone_to + user_phone_from
     pair_id = hashlib.md5(pair_concat.encode()).hexdigest()
+
+    print(pair_id)
     
     query = 'SELECT pairwise_udhar FROM udhar_kharcha.event_details WHERE event_id = %s'
     result = session.execute(query, [event_id])
@@ -207,22 +220,45 @@ def approve_udhar():
     except:
         return _response(False, 'No such event', '')
 
+    print(pairwise_udhar)
+
     try:
         if pairwise_udhar[pair_id] < 0:
-            query = 'UPDATE udhar_kharcha.event_details SET pairwise_udhar[%s] = %s WHERE event_id = %s'
-            result = session.execute(query, [pair_id, -pairwise_udhar[pair_id], event_id])
+            query = SimpleStatement('UPDATE udhar_kharcha.event_details SET pairwise_udhar[%s] = %s WHERE event_id = %s', consistency_level = ConsistencyLevel.LOCAL_QUORUM)
+            result = session.execute(query, (pair_id, -pairwise_udhar[pair_id], event_id))
 
             query = 'SELECT total_amount FROM udhar_kharcha.split_bills WHERE pair_id = %s'
             result = session.execute(query, [pair_id])
 
             current_amount = result.current_rows[0][0]
 
-            query = 'UPDATE udhar_kharcha.split_bills SET total_amount = %s WHERE pair_id = %s'
+            query = SimpleStatement('UPDATE udhar_kharcha.split_bills SET total_amount = %s WHERE pair_id = %s', consistency_level = ConsistencyLevel.LOCAL_QUORUM)
             result = session.execute(query, [current_amount - pairwise_udhar[pair_id], pair_id])
         else:
             return _response(True, 'Already approved', '')
-    except:
+    except Exception as e:
+        print(e)
         return _response(False, 'No such pair in the event', '')
+
+    from_user_id = hashlib.md5(user_phone_from.encode()).hexdigest()
+    to_user_id = hashlib.md5(user_phone_to.encode()).hexdigest()
+
+    query = 'SELECT phone_no, username FROM udhar_kharcha.user_profile WHERE user_id = %s'
+    result = session.execute(query, [from_user_id])
+    result = result.one()
+    from_user_name = result.username
+    from_user_phone_no = result.phone_no
+
+    query = 'SELECT fcm_token FROM udhar_kharcha.fcm_mapping WHERE user_id = %s'
+    result = session.execute(query, [to_user_id])
+    result = result.one()
+    to_fcm_token = result.fcm_token
+
+    title = 'Debt Approved'
+    body = '{0} - {1} approved to pay you Rs. {2}'.format(from_user_name, from_user_phone_no, str(-pairwise_udhar[pair_id]))
+    # image = 'https://aseemrastogi2.files.wordpress.com/2014/01/debt-management.jpg'
+
+    sendTokenNotification(to_fcm_token, title, body)
     
     return _response(True, 'Udhar approved!', '')
 
@@ -293,6 +329,9 @@ def bill_split():
     udhar_givers_participants = min_transactions_for_cur_bill.get_final_udhar_giver_groups() 
     udhar_takers_participants = min_transactions_for_cur_bill.get_final_udhar_taker_groups() 
 
+    print(udhar_givers_participants)
+    print(udhar_takers_participants)
+
 
     pairwise_udhar = dict()
 
@@ -303,6 +342,8 @@ def bill_split():
         k = 0
         for j in range(len(udhar_givers_participants[i])):
             while udhar_givers[udhar_givers_participants[i][j]] > 0:
+                print(udhar_givers)
+                print(udhars_takers)
                 user_to = users_givers[udhar_givers_participants[i][j]]
                 user_from = users_takers[udhar_takers_participants[i][k]]
 
@@ -316,28 +357,33 @@ def bill_split():
                     results = session.execute(query, ([event_id], pair_id))
 
                     # SEE CONVENTION ABOVE
-                    from_user_id = hashlib.md5(users_givers[udhar_givers_participants[i][j]].encode()).hexdigest()
-                    to_user_id = hashlib.md5(users_takers[udhar_takers_participants[i][k]].encode()).hexdigest()
+                    to_user_id = hashlib.md5(users_givers[udhar_givers_participants[i][j]].encode()).hexdigest()
+                    from_user_id = hashlib.md5(users_takers[udhar_takers_participants[i][k]].encode()).hexdigest()
 
-                    query = SimpleStatement("INSERT INTO udhar_kharcha.split_bills (event_ids, from_user_id, pair_id, to_user_id, total_amount) VALUES (%s, %s, %s, %s, %s) IF NOT EXISTS", consistency_level = ConsistencyLevel.LOCAL_QUORUM)
-                    results = session.execute(query, ([event_id], from_user_id, pair_id, to_user_id, 0))
+                    print(users_givers[udhar_givers_participants[i][j]], users_takers[udhar_takers_participants[i][k]])
+
+                    query = SimpleStatement("INSERT INTO udhar_kharcha.split_bills (event_ids, to_user_id, pair_id, from_user_id, total_amount) VALUES (%s, %s, %s, %s, %s) IF NOT EXISTS", consistency_level = ConsistencyLevel.LOCAL_QUORUM)
+                    results = session.execute(query, ([event_id], to_user_id, pair_id, from_user_id, 0))
 
                     #When searching by primary key "ALLOW FILTERING" is NOT required
+
                     query = SimpleStatement("SELECT username, phone_no FROM udhar_kharcha.user_profile WHERE user_id = %s", consistency_level = ConsistencyLevel.LOCAL_QUORUM)
-                    result = session.execute(query, [from_user_id])
+                    result = session.execute(query, [to_user_id])
                     result = result.one()
                     from_user_name, from_user_phone_no = result.username, result.phone_no
 
                     query = SimpleStatement("SELECT fcm_token FROM udhar_kharcha.fcm_mapping WHERE user_id = %s", consistency_level = ConsistencyLevel.LOCAL_QUORUM)
-                    result = session.execute(query, [to_user_id])
+                    result = session.execute(query, [from_user_id])
                     result = result.one()
                     to_fcm_token = result.fcm_token
 
                     #CONFUSION
-                    sendTokenNotification(to_fcm_token, from_user_name, from_user_phone_no, 30)
+                    #sendTokenNotification(to_fcm_token, from_user_name, from_user_phone_no, 30)
 
                 except:
                     return _response(False, 'DB error', '')
+
+                print(udhar_givers[udhar_givers_participants[i][j]], udhars_takers[udhar_takers_participants[i][k]])
                 
                 if udhar_givers[udhar_givers_participants[i][j]] >= udhars_takers[udhar_takers_participants[i][k]]:
                     pairwise_udhar[pair_id] = -udhars_takers[udhar_takers_participants[i][k]]
@@ -346,6 +392,13 @@ def bill_split():
                 else:
                     pairwise_udhar[pair_id] = -udhar_givers[udhar_givers_participants[i][j]]
                     udhars_takers[udhar_takers_participants[i][k]] -= udhar_givers[udhar_givers_participants[i][j]]
+                    udhar_givers[udhar_givers_participants[i][j]] = 0
+
+                title = 'New Debt'
+                body = '{0} - {1} requested you to pay {2}'.format(from_user_name, from_user_phone_no, str(-pairwise_udhar[pair_id]))
+                image = 'https://aseemrastogi2.files.wordpress.com/2014/01/debt-management.jpg'
+
+                sendTokenNotification(to_fcm_token, title, body, image)
     
     try:
         query = SimpleStatement('INSERT INTO udhar_kharcha.event_details (event_detail, event_id, pairwise_udhar, event_payers, event_bill, event_time) VALUES (%s, %s, %s, %s, %s, %s);', consistency_level = ConsistencyLevel.LOCAL_QUORUM)

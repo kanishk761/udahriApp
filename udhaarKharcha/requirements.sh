@@ -5,7 +5,8 @@ sudo apt-get install libapache2-mod-wsgi-py3
 sudo apt-get install python3-pip
 sudo pip3 install flask
 sudo pip3 install cassandra-driver
-sudo pip3 install pytz
+sudo apt-get install python3-tk
+sudo pip3 install firebase-admin
 mkdir ~/src
 sudo ln -sT ~/src /var/www/html/src
 mv app.py src/
