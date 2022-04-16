@@ -381,15 +381,18 @@ def get_personal_expenses():
         return _response(False, 'DB error', '')
     
     user_personal_expenses = list()
-    query = SimpleStatement("SELECT event_detail, event_time, event_bill FROM udhar_kharcha.event_details WHERE event_id = %s ALLOW FILTERING", consistency_level = ConsistencyLevel.LOCAL_QUORUM)
-    for event_id in response.one().event_ids:
-        try:
-            event_response = session.execute(query, [event_id])
-            event_response = event_response.one()
-            print(dict(event_response.event_bill)[user_phone_no])
-            user_personal_expenses.append([event_response.event_detail, event_response.event_time, dict(event_response.event_bill)[user_phone_no]])
-        except:
-            continue
+
+    try:
+        query = SimpleStatement("SELECT event_detail, event_time, event_bill FROM udhar_kharcha.event_details WHERE event_id = %s ALLOW FILTERING", consistency_level = ConsistencyLevel.LOCAL_QUORUM)
+        for event_id in response.one().event_ids:
+            try:
+                event_response = session.execute(query, [event_id])
+                event_response = event_response.one()
+                user_personal_expenses.append([event_response.event_detail, event_response.event_time, dict(event_response.event_bill)[user_phone_no]])
+            except:
+                continue
+    except:
+        pass
 
     return _response(True, "All personal expenses for input user", user_personal_expenses)
 
@@ -446,7 +449,42 @@ def notification_details():
     except:
         return _response(False, 'DB error', '')
 
-        
+
+
+@app.route('/get_notification_details', methods=["POST"])
+def get_notification_details():
+    input = request.get_json()
+    try:
+        user_phone_no = input["user_phone_no"]
+    except:
+        return _response(False, 'incorrect format', '')
+
+    user_id = hashlib.md5(user_phone_no.encode()).hexdigest()
+
+    try:
+        query = SimpleStatement("SELECT notification_ids FROM udhar_kharcha.user_notifications_mapping WHERE user_id = %s ALLOW FILTERING", consistency_level = ConsistencyLevel.LOCAL_QUORUM)
+        response = session.execute(query, [user_id])
+    except:
+        return _response(False, 'DB error', '')
+    
+    user_notifications = list()
+
+    try:
+        query = SimpleStatement("SELECT notification_body, notification_title, notification_time FROM udhar_kharcha.notification_details WHERE notification_id = %s ALLOW FILTERING", consistency_level = ConsistencyLevel.LOCAL_QUORUM)
+        for notification_id in response.one().notification_ids:
+            print(notification_id)
+            try:
+                notification_response = session.execute(query, [notification_id])
+                notification_response = notification_response.one()
+                user_notifications.append([notification_response.notification_title, notification_response.notification_body, notification_response.notification_time])
+            except:
+                continue
+    except:
+        pass
+
+    return _response(True, "All personal expenses for input user", user_notifications)
+
+
 
 if __name__ == '__main__':
     app.run(debug = True, threaded = True)

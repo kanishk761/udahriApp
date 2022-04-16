@@ -265,28 +265,22 @@ class EventDetails {
 	}
 }
 
-class NotificationDetails {
+class GetNotificationDetails {
   late String user_phone_no;
-  late String notification_title;
-  late String notification_body;
 
   bool success = false;
   String message = "Network Error";
   List data = [];
 
-  NotificationDetails(String user_phone_n, String notification_t, String notification_b) {
+  NotificationDetails(String user_phone_n) {
     user_phone_no = user_phone_n;
-    notification_title = notification_t;
-    notification_body = notification_b;
   }
 
   Future<void> sendQuery() async {
 
     try {
-      dynamic response = await dio.post('/notification_details', data: {
-                      'user_phone_no': user_phone_no,
-                      'notification_title': notification_title,
-                      'notification_body': notification_body
+      dynamic response = await dio.post('/get_notification_details', data: {
+                      'user_phone_no': user_phone_no
                     });
       response = response.data;//Map<String, dynamic>.from(response.data);
       success = response['success'];
