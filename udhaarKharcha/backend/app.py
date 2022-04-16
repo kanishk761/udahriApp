@@ -96,12 +96,16 @@ def get_pair_details():
     
     response_data = []
 
+
     user_id_to_user_id_from_concat = user_id_to + user_id_from
     pair_id_user_id_to_user_id_from = hashlib.md5(user_id_to_user_id_from_concat.encode()).hexdigest()
 
     q1 = 'SELECT event_ids FROM udhar_kharcha.split_bills WHERE pair_id = %s'
     r1 = session.execute(q1, [pair_id_user_id_to_user_id_from])
-    events_id_take_list = r1.current_rows[0][0]
+
+    events_id_take_list = []
+    if len(r1.current_rows) > 0:
+        events_id_take_list = r1.current_rows[0][0]
 
 
 
@@ -110,7 +114,11 @@ def get_pair_details():
 
     q2 = 'SELECT event_ids FROM udhar_kharcha.split_bills WHERE pair_id = %s'
     r2 = session.execute(q2, [pair_id_user_id_from_user_id_to])
-    events_id_give_list = r2.current_rows[0][0]
+
+    events_id_give_list = []
+    if len(r1.current_rows) > 0:
+        events_id_give_list = r2.current_rows[0][0]
+    
 
     i = 0
     j = 0
@@ -168,6 +176,61 @@ def get_pair_details():
         j += 1
 
     return _response(True, 'pair_details_returned', response_data)
+
+
+'''
+    ***Note: here user_phone_from is the device phone number
+    input format = {
+        "user_phone_from" : "+919213751983",
+        "user_phone_to" : "+919315943390",
+        "event_id" : "yoyo"
+    }
+'''
+@app.route('/approve_udhar', methods = ["POST"])
+def approve_udhar():
+    input = request.get_json()
+    try:
+        user_phone_from = input["user_phone_from"]
+        user_phone_to = input["user_phone_to"]
+        event_id = input["event_id"]
+    except:
+        return _response(False, 'incorrect format', '')
+    
+    pair_concat = user_phone_to + user_phone_from
+    pair_id = hashlib.md5(pair_concat.encode()).hexdigest()
+    
+    query = 'SELECT pairwise_udhar FROM udhar_kharcha.event_details WHERE event_id = %s'
+    result = session.execute(query, [event_id])
+
+    try:
+        pairwise_udhar = result.current_rows[0][0]
+    except:
+        return _response(False, 'No such event', '')
+
+    try:
+        if pairwise_udhar[pair_id] < 0:
+            query = 'UPDATE udhar_kharcha.event_details SET pairwise_udhar[%s] = %s WHERE event_id = %s'
+            result = session.execute(query, [pair_id, -pairwise_udhar[pair_id], event_id])
+
+            query = 'SELECT total_amount FROM udhar_kharcha.split_bills WHERE pair_id = %s'
+            result = session.execute(query, [pair_id])
+
+            current_amount = result.current_rows[0][0]
+
+            query = 'UPDATE udhar_kharcha.split_bills SET total_amount = %s WHERE pair_id = %s'
+            result = session.execute(query, [current_amount - pairwise_udhar[pair_id], pair_id])
+        else:
+            return _response(True, 'Already approved', '')
+    except:
+        return _response(False, 'No such pair in the event', '')
+    
+    return _response(True, 'Udhar approved!', '')
+
+    
+    
+
+    
+
 
 
 
@@ -252,22 +315,25 @@ def bill_split():
                     query = SimpleStatement("UPDATE udhar_kharcha.split_bills SET event_ids= event_ids + %s WHERE pair_id = %s IF EXISTS", consistency_level = ConsistencyLevel.LOCAL_QUORUM)
                     results = session.execute(query, ([event_id], pair_id))
 
+                    # SEE CONVENTION ABOVE
                     from_user_id = hashlib.md5(users_givers[udhar_givers_participants[i][j]].encode()).hexdigest()
                     to_user_id = hashlib.md5(users_takers[udhar_takers_participants[i][k]].encode()).hexdigest()
 
                     query = SimpleStatement("INSERT INTO udhar_kharcha.split_bills (event_ids, from_user_id, pair_id, to_user_id, total_amount) VALUES (%s, %s, %s, %s, %s) IF NOT EXISTS", consistency_level = ConsistencyLevel.LOCAL_QUORUM)
                     results = session.execute(query, ([event_id], from_user_id, pair_id, to_user_id, 0))
 
-                    query = SimpleStatement("SELECT username, phone_no FROM udhar_kharcha.user_profile WHERE user_id = %s ALLOW FILTERING", consistency_level = ConsistencyLevel.LOCAL_QUORUM)
+                    #When searching by primary key "ALLOW FILTERING" is NOT required
+                    query = SimpleStatement("SELECT username, phone_no FROM udhar_kharcha.user_profile WHERE user_id = %s", consistency_level = ConsistencyLevel.LOCAL_QUORUM)
                     result = session.execute(query, [from_user_id])
                     result = result.one()
                     from_user_name, from_user_phone_no = result.username, result.phone_no
 
-                    query = SimpleStatement("SELECT fcm_token FROM udhar_kharcha.fcm_mapping WHERE user_id = %s ALLOW FILTERING", consistency_level = ConsistencyLevel.LOCAL_QUORUM)
+                    query = SimpleStatement("SELECT fcm_token FROM udhar_kharcha.fcm_mapping WHERE user_id = %s", consistency_level = ConsistencyLevel.LOCAL_QUORUM)
                     result = session.execute(query, [to_user_id])
                     result = result.one()
                     to_fcm_token = result.fcm_token
 
+                    #CONFUSION
                     sendTokenNotification(to_fcm_token, from_user_name, from_user_phone_no, 30)
 
                 except:
@@ -283,7 +349,7 @@ def bill_split():
     
     try:
         query = SimpleStatement('INSERT INTO udhar_kharcha.event_details (event_detail, event_id, pairwise_udhar, event_payers, event_bill, event_time) VALUES (%s, %s, %s, %s, %s, %s);', consistency_level = ConsistencyLevel.LOCAL_QUORUM)
-        session.execute(query, (event_name, event_id, pairwise_udhar, participants_paid, participants_amount_on_bill, event_time)) #change 100 to event time
+        session.execute(query, (event_name, event_id, pairwise_udhar, participants_paid, participants_amount_on_bill, event_time))
     except:
         return _response(False, 'DB error', '')
 
@@ -327,7 +393,7 @@ def getUdhars():
         if user[0] in user_udhars:
             user_udhars[user[0]] = user_udhars[user[0]] - user[1]
         else:
-            user_udhars[user[0]] = user[1]
+            user_udhars[user[0]] = -user[1]
 
     return _response(True, "All udhar for input user", user_udhars)
 
