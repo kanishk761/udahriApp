@@ -2,7 +2,7 @@
 import 'package:dio/dio.dart';
 
 var options = BaseOptions(
-  baseUrl: 'http://ec2-3-111-196-101.ap-south-1.compute.amazonaws.com',
+  baseUrl: 'http://ec2-35-154-234-121.ap-south-1.compute.amazonaws.com',
   //baseUrl : 'http://127.0.0.1:5000/',
   connectTimeout: 5000,
   receiveTimeout: 3000,

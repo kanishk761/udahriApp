@@ -2,7 +2,7 @@ from turtle import color
 import firebase_admin
 from firebase_admin import credentials, messaging
 
-credential = credentials.Certificate(r'C:\Users\saran\Desktop\csd\udahriApp\udhaarKharcha\backend\firebase.json')
+credential = credentials.Certificate('/home/shubham/Desktop/Desktop/Courses/Computer-System-Design/Project/udahriApp/udhaarKharcha/backend/firebase.json')
 firebase_admin.initialize_app(credential)
 
 def sendTokenNotification(fcm_token, title, body, image):
@@ -51,4 +51,4 @@ def sendTopicNotification(topic = 'analytics'):
     response = messaging.send(message)
     print('Successfully sent message:', response)
 
-# sendTokenNotification('cJiOesCZTpyBI2NOu4Xnw1:APA91bFQOhklbMVhC7aDlQBdqYqCpz_5j-QiURXJ6wX5uZHmO31vJ8AAhplmnQnJlqSnrHckhKxfCxxWp4nCvzxgOAUkizLNj5ygrd_XIZCM9WDANd_DpJfmrFXKKK4sc7GMMGqlv2Kq', 'new debt', 'eijisefise', 'https://www.clipartmax.com/png/middle/157-1575710_open-approve-icon.png')
+sendTokenNotification('cJiOesCZTpyBI2NOu4Xnw1:APA91bFQOhklbMVhC7aDlQBdqYqCpz_5j-QiURXJ6wX5uZHmO31vJ8AAhplmnQnJlqSnrHckhKxfCxxWp4nCvzxgOAUkizLNj5ygrd_XIZCM9WDANd_DpJfmrFXKKK4sc7GMMGqlv2Kq', 'new debt', 'eijisefise', 'https://www.clipartmax.com/png/middle/157-1575710_open-approve-icon.png')
