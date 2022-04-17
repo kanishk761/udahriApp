@@ -27,7 +27,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
     print(message.data);
     if(message.data["screen"] == 'launch_analytics_page') {
       print("yes, I am changing screen");
-      Navigator.pushNamed(context, '/notify');
+      // Navigator.of(context).pushNamed('/notify');
     }
   }
 

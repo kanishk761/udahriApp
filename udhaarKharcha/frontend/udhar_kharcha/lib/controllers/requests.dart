@@ -288,7 +288,7 @@ class GetNotificationDetails {
     on DioError catch(e) {
       print(e.message);
     }
-	}  
+	}
 }
 
 class ApproveRejectUdhar {

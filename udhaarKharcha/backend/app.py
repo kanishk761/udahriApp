@@ -16,7 +16,7 @@ from notification import sendTokenNotification
 app = Flask(__name__)
 
 ssl_context = SSLContext(PROTOCOL_TLSv1_2)
-ssl_context.load_verify_locations(r'C:\Users\saran\Desktop\csd\udahriApp\udhaarKharcha\backend\sf-class2-root.crt')
+ssl_context.load_verify_locations('/home/shubham/Desktop/Desktop/Courses/Computer-System-Design/Project/udahriApp/udhaarKharcha/backend/sf-class2-root.crt')
 ssl_context.verify_mode = CERT_REQUIRED
 auth_provider = PlainTextAuthProvider(username='Admin-at-442245796012', password='Zo2yw3zb//WD1muANf3BPM9ZhzmO2jjDCczR+NsOx/4=')
 cluster = Cluster(['cassandra.ap-south-1.amazonaws.com'], ssl_context=ssl_context, auth_provider=auth_provider, port=9142)
@@ -29,12 +29,6 @@ def _response(_success, _message, _data):
 @app.route('/')
 def home():
     return 'Home'
-
-
-@app.route('/delete')
-def delete():
-    query = SimpleStatement("TRUNCATE udhar_kharcha.fcm_mapping")
-    session.execute(query)
 
 
 
@@ -112,7 +106,8 @@ def get_pair_details():
     r1 = session.execute(q1, [pair_id_user_id_to_user_id_from])
 
     events_id_take_list = []
-    if len(r1.current_rows) > 0:
+    print(r1.current_rows[0])
+    if len(r1.current_rows) > 0 and r1.current_rows[0][0] is not None:
         events_id_take_list = r1.current_rows[0][0]
 
 
@@ -124,12 +119,15 @@ def get_pair_details():
     r2 = session.execute(q2, [pair_id_user_id_from_user_id_to])
 
     events_id_give_list = []
-    if len(r1.current_rows) > 0:
+    print(r2.current_rows)
+    if len(r2.current_rows) > 0 and r2.current_rows[0][0] is not None:
+        print("jkkj")
         events_id_give_list = r2.current_rows[0][0]
     
 
     i = 0
     j = 0
+    print(events_id_give_list, events_id_take_list)
     while i < len(events_id_take_list) and j < len(events_id_give_list):
         q1 = 'SELECT event_time FROM udhar_kharcha.event_details WHERE event_id = %s'
         r1 = session.execute(q1, [events_id_take_list[i]])
@@ -267,6 +265,7 @@ def approve_udhar():
     image = 'https://www.clipartmax.com/png/middle/157-1575710_open-approve-icon.png'
 
     sendTokenNotification(to_fcm_token, title, body, image)
+    notification_details(user_phone_to, title, body)
     
     return _response(True, 'Udhar approved!', '')
 
@@ -320,6 +319,7 @@ def reject_udhar():
     image = 'http://images.clipartpanda.com/rejection-clipart-k4040162.jpg'
 
     sendTokenNotification(to_fcm_token, title, body, image)
+    notification_details(user_phone_to, title, body)
 
     return _response(True, 'Udhar rejected!', '')
 
@@ -455,7 +455,9 @@ def bill_split():
 
                 print(to_fcm_token)
 
-                # sendTokenNotification(to_fcm_token, title, body, image)
+                sendTokenNotification(to_fcm_token, title, body, image)
+                # redirect(url_for('notification_details', user_phone_no = user_from, notification_title = title, notification_body = body))
+                notification_details(user_from, title, body)
     
     try:
         query = SimpleStatement('INSERT INTO udhar_kharcha.event_details (event_detail, event_id, pairwise_udhar, event_payers, event_bill, event_time) VALUES (%s, %s, %s, %s, %s, %s);', consistency_level = ConsistencyLevel.LOCAL_QUORUM)
@@ -602,15 +604,18 @@ def event_details():
 
 
 
-@app.route('/notification_details', methods=["POST"])
-def notification_details():
-    input = request.get_json()
-    try:
-        user_phone_no = input["user_phone_no"]
-        notification_title = input["notification_title"]
-        notification_body = input["notification_body"]
-    except:
-        return _response(False, 'incorrect format', '')
+# @app.route('/notification_details/<user_phone_no>/<notification_title>/<notification_body>')
+def notification_details(user_phone_no, notification_title, notification_body):
+    # if(request.method == "POST"):
+    #     input = request.get_json()
+    #     try:
+    #         user_phone_no = input["user_phone_no"]
+    #         notification_title = input["notification_title"]
+    #         notification_body = input["notification_body"]
+    #     except:
+    #         return _response(False, 'incorrect format', '')
+
+    print("ijfeioer")
 
     notification_time = datetime.now()
     notification_id = hashlib.md5((user_phone_no+notification_time.strftime("%m/%d/%Y%H:%M:%S.%f")).encode()).hexdigest()

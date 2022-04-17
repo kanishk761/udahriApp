@@ -22,6 +22,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:udhar_kharcha/screens/notification_screen.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey(debugLabel: "Main Navigator");
+bool notification_clicked = false;
 
 AndroidNotificationChannel channel = const AndroidNotificationChannel(
   'high_importance_channel', // id
@@ -35,7 +36,7 @@ FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNo
 Future<void> selectNotification(String? payload) async {
   if (payload != null) {
     print('notification payload:');
-    print(payload);
+    print(payload.length);
     print("select notification");
     navigatorKey.currentState?.pushNamed('/notify');
     print("no way");
@@ -70,8 +71,9 @@ void main() async {
 
     print(notificationAppLaunchDetails!.didNotificationLaunchApp);
 
-    if(notificationAppLaunchDetails.didNotificationLaunchApp == false) {
-      print("lauched by notification:)");
+    if(notificationAppLaunchDetails.didNotificationLaunchApp == true) {
+      notification_clicked = true;
+      print("not lauched by notification:(");
       navigatorKey.currentState?.pushNamed('/notify');
     }
 
@@ -83,6 +85,7 @@ void main() async {
       print(message.notification!.body != null);
       // if (message.notification!.body != null) {
         print("inside");
+        print(navigatorKey.currentState);
         navigatorKey.currentState?.pushNamed('/notify');
       // }
     });
@@ -131,12 +134,12 @@ class MyApp extends StatelessWidget {
       //         );
       //       default:
       //         return MaterialPageRoute(
-      //           builder: (_) => AddDebtScreen()
+      //           builder: (_) => NavigationScreen()
       //         );
       //     }
-      // }
+      // },
       routes: {
-        '/' : (context) => FirebaseAuth.instance.currentUser==null ? WelcomeScreen() : NavigationScreen(),
+        '/' : (context) => FirebaseAuth.instance.currentUser==null ? WelcomeScreen() : notification_clicked ? NotificationScreen() : NavigationScreen(),
         '/login' : (context) => Login(),
         '/signup' : (context) => SignupScreen(),
         '/home' : (context) => NavigationScreen(),
