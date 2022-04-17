@@ -9,9 +9,9 @@ import 'package:intl/intl.dart';
 
 
 class PersonalExpenseScreen extends StatefulWidget {
-  const PersonalExpenseScreen({Key? key, required this.expenses}) : super(key: key);
+  PersonalExpenseScreen({Key? key, required this.expenses}) : super(key: key);
 
-  final List expenses;
+  List expenses;
 
   @override
   State<PersonalExpenseScreen> createState() => _PersonalExpenseScreenState();
@@ -37,7 +37,9 @@ class _PersonalExpenseScreenState extends State<PersonalExpenseScreen> {
         onRefresh: () async{
           GetPersonalExpense obj = GetPersonalExpense(_phoneNumber);
           await obj.sendQuery();
-          await Future.delayed(Duration(seconds: 2));
+          setState(() {
+            widget.expenses = obj.data;
+          });
         },
         child: ListView.builder(
           physics: AlwaysScrollableScrollPhysics(),

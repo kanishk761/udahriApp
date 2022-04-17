@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:udhar_kharcha/controllers/dataStore.dart';
 import 'package:udhar_kharcha/controllers/requests.dart';
@@ -7,10 +8,12 @@ import 'package:udhar_kharcha/screens/tag_widget.dart';
 
 class EventScreen extends StatefulWidget {
   final Event eventData;
+  final String name_to;
 
   const EventScreen({
     Key? key,
     required this.eventData,
+    required this.name_to,
   }) : super(key: key);
 
 
@@ -26,25 +29,38 @@ class _EventScreenState extends State<EventScreen> {
   List<Widget> billWidget = [];
   List<Widget> payerWidget = [];
 
+  bool loading = true;
+
   getEventDetails(event_id) async {
+    setState(() {
+      loading = true;
+    });
     try {
       EventDetails obj = EventDetails(event_id);
       await obj.sendQuery();
       print(obj.data);
-      if(obj.success){
-        setState(() {
+      setState(() {
+        loading = false;
+        if (obj.success) {
           bill = obj.data['event_bill'];
           var eveP = obj.data['event_payers'];
           eveP.keys.toList().forEach((key) {
-            if(eveP[key]!=0) {
-              payers.addAll({key : eveP[key]});
+            if (eveP[key] != 0) {
+              payers.addAll({key: eveP[key]});
             }
           });
-        });
-      }
+        }
+        else {
+          ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Couldn\'t fetch data'),duration: Duration(seconds: 1),)
+          );
+        }
+      });
     }
-    catch (e) {
-      print(e);
+    catch(e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Something went wrong'),duration: Duration(seconds: 1))
+      );
     }
   }
 
@@ -52,12 +68,18 @@ class _EventScreenState extends State<EventScreen> {
     billWidget = [];
     bill.forEach((key, value) {
       billWidget.add(ListTile(
-        title: Text(key),
+        title: Text(
+          key,
+          overflow: TextOverflow.fade,
+          softWrap: false,
+          maxLines: 1,
+        ),
         subtitle: Text(key),
         trailing: Text(
           '\u{20B9} ${value}',
           overflow: TextOverflow.fade,
           softWrap: false,
+          maxLines: 1,
           style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.w900
@@ -93,7 +115,7 @@ class _EventScreenState extends State<EventScreen> {
   @override
   void initState() {
     super.initState();
-    getEventDetails('82d1cc9882d9f4ff99c3c980cfcd8960');
+    getEventDetails(widget.eventData.id);
   }
 
 
@@ -118,7 +140,7 @@ class _EventScreenState extends State<EventScreen> {
             ),
           )
       ),
-      body: SingleChildScrollView(
+      body: loading ? Center(child: CircularProgressIndicator()) : SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(20),
           child: Column(
@@ -132,6 +154,7 @@ class _EventScreenState extends State<EventScreen> {
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 45,
+                      color: !widget.eventData.willGiveMoney ? Colors.green : Colors.red
                     ),
                   ),
                 ]
@@ -139,12 +162,26 @@ class _EventScreenState extends State<EventScreen> {
               SizedBox(height: 10,),
               Text(
                 widget.eventData.name,
+                overflow: TextOverflow.fade,
+                softWrap: false,
+                maxLines: 1,
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
-                  fontSize: 20,
+                  fontSize: 25,
                 ),
               ),
-              TagWidget(emoji: '📅', label: '17 Jul' ,width: 50,),
+              SizedBox(height: 5,),
+              Row(
+                children: [
+                  TagWidget(emoji: '📅', label: '17 Jul' ,width: 50,color: 0xffffffff,),
+                  SizedBox(width: 5,),
+
+                  !widget.eventData.willGiveMoney ?
+                  TagWidget(emoji: '💰', label: 'Take from ${widget.name_to}', width: 100,color: 0xffffffff,) :
+                  TagWidget(emoji: '💸', label: 'Pay to ${widget.name_to}', width: 100,color: 0xffffffff,)
+                ],
+              ),
+
               SizedBox(height: 10,),
               Container(
                 //width: double.infinity,

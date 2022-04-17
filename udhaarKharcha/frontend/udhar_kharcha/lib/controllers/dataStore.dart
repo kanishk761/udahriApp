@@ -32,8 +32,8 @@ class SplitBillPerson {
 class Event {
   late String name;
   late String id;
-  late String amount;
+  late double amount;
   late bool isApproved;
-  late bool willGetMoney;
-  Event(this.name,this.id,this.amount,this.isApproved,this.willGetMoney);
+  late bool willGiveMoney;
+  Event(this.name,this.id,this.amount,this.isApproved,this.willGiveMoney);
 }

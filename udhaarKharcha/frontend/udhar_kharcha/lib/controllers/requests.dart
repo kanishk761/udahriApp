@@ -2,8 +2,7 @@
 import 'package:dio/dio.dart';
 
 var options = BaseOptions(
-  baseUrl: 'http://ec2-3-111-196-101.ap-south-1.compute.amazonaws.com',
-  //baseUrl : 'http://127.0.0.1:5000/',
+  baseUrl: 'http://ec2-35-154-234-121.ap-south-1.compute.amazonaws.com',
   connectTimeout: 5000,
   receiveTimeout: 3000,
 );
@@ -82,7 +81,7 @@ class GetPairDetails {
 
   bool success = false;
   String message = "Network Error";
-  Map data = {};
+  List data = [];
 
   GetPairDetails(String user_id_f, String user_id_t) {
     user_id_from = user_id_f;
@@ -99,11 +98,10 @@ class GetPairDetails {
       response = response.data;//Map<String, dynamic>.from(response.data);
       success = response['success'];
       message = response['message'];
-      data = Map<String, dynamic>.from(response['data']);
+      data = response['data'];
       print('response: '+ message);
-    }
-    catch(e) {
-      print(e);
+    } on DioError catch(e) {
+      print(e.message);
     }
 	}
 }
@@ -166,8 +164,8 @@ class GetUdhar {
       data = Map<String, dynamic>.from(response['data']);
       print('response: '+ message);
     }
-    catch(e) {
-      print(message);
+    on DioError catch(e) {
+      print(e.message);
     }
 	}
 }
@@ -229,8 +227,8 @@ class GetPersonalExpense {
       data = response['data'];
       print(data);
     }
-    catch(e) {
-      print(message);
+    on DioError catch(e) {
+      print(e.message);
     }
 	}
 }
@@ -258,8 +256,8 @@ class EventDetails {
       data = response['data'];
       print(data);
     }
-    catch(e) {
-      print(e);
+    on DioError catch(e) {
+      print(e.message);
     }
 	}
 }
@@ -287,8 +285,45 @@ class GetNotificationDetails {
       data = response['data'];
       print(data);
     }
-    catch(e) {
-      print(e);
+    on DioError catch(e) {
+      print(e.message);
     }
 	}  
+}
+
+class ApproveRejectUdhar {
+  late String user_phone_from;
+  late String user_phone_to;
+  late String event_id;
+  late bool isApprove;
+
+  bool success = false;
+  String message = "Network Error";
+  String data = '';
+
+  ApproveRejectUdhar(String user_phone_f, String user_phone_t, String event_i, bool approve) {
+    user_phone_from = user_phone_f;
+    user_phone_to = user_phone_t;
+    event_id = event_i;
+    isApprove = approve;
+  }
+
+  Future<void> sendQuery() async {
+
+    try {
+      dynamic response = await dio.post(isApprove ? '/approve_udhar' : '/reject_udhar', data: {
+        'user_phone_from': user_phone_from,
+        'user_phone_to': user_phone_to,
+        'event_id': event_id
+      });
+      response = response.data;//Map<String, dynamic>.from(response.data);
+      success = response['success'];
+      message = response['message'];
+      data = response['data'];
+      print(data);
+    }
+    on DioError catch(e) {
+      print(e.message);
+    }
+  }
 }

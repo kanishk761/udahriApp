@@ -4,7 +4,7 @@ import 'package:udhar_kharcha/controllers/requests.dart';
 import 'package:udhar_kharcha/screens/details_screen.dart';
 
 class HomeScreen extends StatefulWidget {
-  final Map persons;
+  Map persons;
   HomeScreen({Key? key, required this.persons}) : super(key: key);
 
 
@@ -27,8 +27,9 @@ class _HomeScreenState extends State<HomeScreen> {
         onRefresh: () async{
           GetUdhar obj = GetUdhar(_phoneNumber);
           await obj.sendQuery();
-          print(obj.data);
-          await Future.delayed(Duration(seconds: 2));
+          setState(() {
+            widget.persons = obj.data;
+          });
         },
         child: ListView.builder(
           physics: AlwaysScrollableScrollPhysics(),
@@ -73,6 +74,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   //size: 45,
                 ),
                 trailing: Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     RichText(

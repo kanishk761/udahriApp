@@ -17,7 +17,6 @@ class NavigationScreen extends StatefulWidget {
 }
 
 class _NavigationScreenState extends State<NavigationScreen> {
-  String _user = 'Saransh';
 
   String _username = FirebaseAuth.instance.currentUser?.displayName ?? '';
   String _phoneNumber = FirebaseAuth.instance.currentUser?.phoneNumber ?? '';
@@ -28,7 +27,7 @@ class _NavigationScreenState extends State<NavigationScreen> {
 
   // Nav bar variables
   int _selectedNavIndex = 0;
-  final _screenName = ['Home','Personal Expense','yolo'];
+  final _screenName = ['Home','Personal Expense','Analytics'];
   String _screenTitle = 'Home';
 
   void _onItemTapped(int index){
@@ -45,25 +44,30 @@ class _NavigationScreenState extends State<NavigationScreen> {
       case 1:
         return personalExpenseLoading ? ShimmerLoading() : PersonalExpenseScreen(expenses: expenses,);
       default:
-        return Center(child: Text('Third'),);
+        return Center(child: Text('Nothing here to see'),);
     }
   }
 
   // get Udhar
-  Map persons  = {'adsf' : ['asdf',341.0], 'qwer' :['asdf',-64.0], 'zxv' : ['asd',0.0],'adqwesf' : ['asdf',-341.0], 'qwzxcver' :['asdf',-64.0], 'zxvrtu' : ['asd',0.0]}; //{}; // phoneNumber : [name,amount]
+  Map persons  = {}; // phoneNumber : [name,amount]
 
   void getUdharData() async {
     setState(() {
       homeLoading = true;
     });
-    await Future.delayed(Duration(seconds: 2));
-    GetUdhar obj = GetUdhar(_username);
+    //await Future.delayed(Duration(seconds: 2));
+    GetUdhar obj = GetUdhar(_phoneNumber);
     await obj.sendQuery();
     setState(() {
+      homeLoading = false;
       if(obj.success) {
         persons = obj.data;
       }
-      homeLoading = false;
+      else {
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Couldn\'t fetch data'),duration: Duration(seconds: 1),)
+        );
+      }
     });
     print(persons);
   }
