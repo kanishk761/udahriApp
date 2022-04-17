@@ -212,11 +212,14 @@ def approve_udhar():
 
     print(pair_id)
     
-    query = 'SELECT pairwise_udhar FROM udhar_kharcha.event_details WHERE event_id = %s'
+    query = 'SELECT pairwise_udhar, event_detail, event_time FROM udhar_kharcha.event_details WHERE event_id = %s'
     result = session.execute(query, [event_id])
 
     try:
-        pairwise_udhar = result.current_rows[0][0]
+        result = result.one()
+        pairwise_udhar = result.pairwise_udhar
+        event_detail = result.event_detail
+        event_time = result.event_time
     except:
         return _response(False, 'No such event', '')
 
@@ -243,32 +246,84 @@ def approve_udhar():
     from_user_id = hashlib.md5(user_phone_from.encode()).hexdigest()
     to_user_id = hashlib.md5(user_phone_to.encode()).hexdigest()
 
-    query = 'SELECT phone_no, username FROM udhar_kharcha.user_profile WHERE user_id = %s'
-    result = session.execute(query, [from_user_id])
-    result = result.one()
-    from_user_name = result.username
-    from_user_phone_no = result.phone_no
+    print("here")
+    try:
+        query = 'SELECT phone_no, username FROM udhar_kharcha.user_profile WHERE user_id = %s'
+        result = session.execute(query, [from_user_id])
+        result = result.one()
+        from_user_name = result.username
+        from_user_phone_no = result.phone_no
 
-    query = 'SELECT fcm_token FROM udhar_kharcha.fcm_mapping WHERE user_id = %s'
-    result = session.execute(query, [to_user_id])
-    result = result.one()
-    to_fcm_token = result.fcm_token
+        query = 'SELECT fcm_token FROM udhar_kharcha.fcm_mapping WHERE user_id = %s'
+        result = session.execute(query, [to_user_id])
+        result = result.one()
+        to_fcm_token = result.fcm_token
+    except:
+        return _response(False, 'DB error', '')
+
 
     title = 'Debt Approved'
-    body = '{0} - {1} approved to pay you Rs. {2}'.format(from_user_name, from_user_phone_no, str(-pairwise_udhar[pair_id]))
-    # image = 'https://aseemrastogi2.files.wordpress.com/2014/01/debt-management.jpg'
+    body = '[{0} - {1}] {2} - {3} has approved your request to pay you Rs. {4}'.format(event_detail, event_time, from_user_name, from_user_phone_no, str(-pairwise_udhar[pair_id]))
+    image = 'https://www.clipartmax.com/png/middle/157-1575710_open-approve-icon.png'
 
-    sendTokenNotification(to_fcm_token, title, body)
+    sendTokenNotification(to_fcm_token, title, body, image)
     
     return _response(True, 'Udhar approved!', '')
 
+
+
+@app.route('/reject_udhar', methods = ["POST"])
+def reject_udhar():
+    input = request.get_json()
+    try:
+        user_phone_from = input["user_phone_from"]
+        user_phone_to = input["user_phone_to"]
+        event_id = input["event_id"]
+    except:
+        return _response(False, 'incorrect format', '')
+
+    pair_concat = user_phone_to + user_phone_from
+    pair_id = hashlib.md5(pair_concat.encode()).hexdigest()
+
+    print(pair_id)
     
-    
+    query = 'SELECT pairwise_udhar, event_detail, event_time FROM udhar_kharcha.event_details WHERE event_id = %s'
+    result = session.execute(query, [event_id])
+
+    try:
+        result = result.one()
+        pairwise_udhar = result.pairwise_udhar
+        event_detail = result.event_detail
+        event_time = result.event_time
+    except:
+        return _response(False, 'No such event', '')
+
+    from_user_id = hashlib.md5(user_phone_from.encode()).hexdigest()
+    to_user_id = hashlib.md5(user_phone_to.encode()).hexdigest()
+
+    try:
+        query = 'SELECT phone_no, username FROM udhar_kharcha.user_profile WHERE user_id = %s'
+        result = session.execute(query, [from_user_id])
+        result = result.one()
+        from_user_name = result.username
+        from_user_phone_no = result.phone_no
+
+        query = 'SELECT fcm_token FROM udhar_kharcha.fcm_mapping WHERE user_id = %s'
+        result = session.execute(query, [to_user_id])
+        result = result.one()
+        to_fcm_token = result.fcm_token
+    except:
+        return _response(False, 'DB error', '')
+
+    title = 'Debt Rejected'
+    body = '[{0} - {1}] {2} - {3} has rejected your request to pay you Rs. {4}'.format(event_detail, event_time, from_user_name, from_user_phone_no, str(-pairwise_udhar[pair_id]))
+    image = 'http://images.clipartpanda.com/rejection-clipart-k4040162.jpg'
+
+    sendTokenNotification(to_fcm_token, title, body, image)
+
+    return _response(True, 'Udhar rejected!', '')
 
     
-
-
-
 
 '''
     input format = {
@@ -398,7 +453,9 @@ def bill_split():
                 body = '{0} - {1} requested you to pay {2}'.format(from_user_name, from_user_phone_no, str(-pairwise_udhar[pair_id]))
                 image = 'https://aseemrastogi2.files.wordpress.com/2014/01/debt-management.jpg'
 
-                sendTokenNotification(to_fcm_token, title, body, image)
+                print(to_fcm_token)
+
+                # sendTokenNotification(to_fcm_token, title, body, image)
     
     try:
         query = SimpleStatement('INSERT INTO udhar_kharcha.event_details (event_detail, event_id, pairwise_udhar, event_payers, event_bill, event_time) VALUES (%s, %s, %s, %s, %s, %s);', consistency_level = ConsistencyLevel.LOCAL_QUORUM)
