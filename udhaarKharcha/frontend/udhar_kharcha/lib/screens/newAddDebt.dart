@@ -17,7 +17,7 @@ class SplitBillsScreen extends StatefulWidget {
 }
 
 class _SplitBillsScreenState extends State<SplitBillsScreen> {
-  String _user = FirebaseAuth.instance.currentUser?.displayName ?? '';
+  String _username = FirebaseAuth.instance.currentUser?.displayName ?? '';
   String _phoneNumber = FirebaseAuth.instance.currentUser?.phoneNumber ?? '';
 
   ContactsController _contact = ContactsController();
@@ -40,7 +40,7 @@ class _SplitBillsScreenState extends State<SplitBillsScreen> {
     if(_contact.selectedPeople.isNotEmpty) {
       _controllerPaid.add(TextEditingController());
       _controllerBilled.add(TextEditingController());
-      _splitBillPeople.add(SplitBillPerson(_user, _phoneNumber, 0, 0));
+      _splitBillPeople.add(SplitBillPerson(_username, _phoneNumber, 0, 0));
       _personsWidget.add(udhaarEntryField('You',_phoneNumber, 0, 0, 0));
     }
     for(var i = 0; i<_contact.selectedPeople.length; i++) {
@@ -59,17 +59,21 @@ class _SplitBillsScreenState extends State<SplitBillsScreen> {
     _addPeople();
   }
 
-  addUdhar(String from, String event) async{
-    // try {
-    //   for(var ele in _contact.selectedPeople) {
-    //     print('Adding : ${ele.name}');
-    //     AddUdhar obj = AddUdhar(from, ele.name, ele.amount, event);
-    //     await obj.sendQuery();
-    //   }
-    // }
-    // catch(e) {
-    //   print(e);
-    // }
+  AddBillSplit(String event) async{
+    Map<String, double> participants_paid = {};
+    Map<String, double> participants_amount_on_bill = {};
+    _splitBillPeople.forEach((element) {
+      participants_paid.addAll({element.phoneNumber : element.paidAmount});
+      participants_amount_on_bill.addAll({element.phoneNumber : element.billedAmount});
+    });
+    try {
+      BillSplit obj = BillSplit(participants_paid, participants_amount_on_bill, event);
+      await obj.sendQuery();
+      print(obj.message);
+    }
+    catch(e) {
+      print('failed to add bill split');
+    }
   }
 
   @override
@@ -186,7 +190,7 @@ class _SplitBillsScreenState extends State<SplitBillsScreen> {
                       print(element.paidAmount);
                       print(element.billedAmount);
                     });
-                    //await addUdhar(_user, _controllerEvent.text);
+                    await AddBillSplit(_controllerEvent.text);
                     Navigator.pop(context);
                   }
                   else {

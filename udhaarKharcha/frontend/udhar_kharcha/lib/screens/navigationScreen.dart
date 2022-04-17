@@ -50,7 +50,7 @@ class _NavigationScreenState extends State<NavigationScreen> {
   }
 
   // get Udhar
-  Map persons = {}; // <String,int>
+  Map persons  = {'adsf' : ['asdf',341.0], 'qwer' :['asdf',-64.0], 'zxv' : ['asd',0.0],'adqwesf' : ['asdf',-341.0], 'qwzxcver' :['asdf',-64.0], 'zxvrtu' : ['asd',0.0]}; //{}; // phoneNumber : [name,amount]
 
   void getUdharData() async {
     setState(() {
@@ -60,7 +60,9 @@ class _NavigationScreenState extends State<NavigationScreen> {
     GetUdhar obj = GetUdhar(_username);
     await obj.sendQuery();
     setState(() {
-      persons = obj.data;
+      if(obj.success) {
+        persons = obj.data;
+      }
       homeLoading = false;
     });
     print(persons);
@@ -78,7 +80,8 @@ class _NavigationScreenState extends State<NavigationScreen> {
       GetPersonalExpense obj = GetPersonalExpense(_phoneNumber);
       await obj.sendQuery();
       setState(() {
-        expenses = obj.data;
+        if(obj.success)
+          expenses = obj.data;
         personalExpenseLoading = false;
       });
     }

@@ -1,9 +1,11 @@
+import 'dart:io';
 import 'dart:ui';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:udhar_kharcha/controllers/requests.dart';
 import 'package:udhar_kharcha/screens/tag_widget.dart';
+import 'package:intl/intl.dart';
 
 
 class PersonalExpenseScreen extends StatefulWidget {
@@ -18,6 +20,14 @@ class PersonalExpenseScreen extends StatefulWidget {
 class _PersonalExpenseScreenState extends State<PersonalExpenseScreen> {
   String _user = FirebaseAuth.instance.currentUser?.displayName ?? '';
   String _phoneNumber = FirebaseAuth.instance.currentUser?.phoneNumber ?? '';
+  
+  
+  String parseDate(date) {
+    final DateFormat formatter = DateFormat('dd MMM');
+    final String formatted = formatter.format(HttpDate.parse(date));
+    return formatted;
+  }
+  
 
   @override
   Widget build(BuildContext context) {
@@ -35,7 +45,7 @@ class _PersonalExpenseScreenState extends State<PersonalExpenseScreen> {
           itemCount: widget.expenses.length,
           itemBuilder: (context, index) {
             String event_desc = widget.expenses[index][0];
-            int date = widget.expenses[index][1];
+            String date = widget.expenses[index][1];
             double event_amount = widget.expenses[index][2];
             return Card(
                 elevation: 0,
@@ -49,7 +59,7 @@ class _PersonalExpenseScreenState extends State<PersonalExpenseScreen> {
                       padding: const EdgeInsets.fromLTRB(20,10,15,0),
                       child: Row(
                         children: [
-                          TagWidget(emoji: '📅', label: '17 April' ,width: 50,),
+                          TagWidget(emoji: '📅', label: parseDate(date) ,width: 50,),
                           SizedBox(width: 6,),
                           TagWidget(emoji: '✋', label: 'Personal' , width: 60,),
                           Expanded(

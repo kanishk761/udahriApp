@@ -3,6 +3,7 @@ import 'package:dio/dio.dart';
 
 var options = BaseOptions(
   baseUrl: 'http://ec2-3-111-196-101.ap-south-1.compute.amazonaws.com',
+  //baseUrl : 'http://127.0.0.1:5000/',
   connectTimeout: 5000,
   receiveTimeout: 3000,
 );
@@ -108,15 +109,15 @@ class GetPairDetails {
 }
 
 class BillSplit {
-  late Map<String, int> participants_paid;
-  late Map<String, int> participants_amount_on_bill;
+  late Map<String, double> participants_paid;
+  late Map<String, double> participants_amount_on_bill;
   late String event_name;
 
   bool success = false;
   String message = "Network Error";
   Map data = {};
 
-  BillSplit(Map<String, int> participants_p, Map<String, int> participants_amt_on_bill, String event_n) {
+  BillSplit(Map<String, double> participants_p, Map<String, double> participants_amt_on_bill, String event_n) {
     participants_paid = participants_p;
     participants_amount_on_bill = participants_amt_on_bill;
     event_name = event_n;
@@ -166,7 +167,7 @@ class GetUdhar {
       print('response: '+ message);
     }
     catch(e) {
-      print(e);
+      print(message);
     }
 	}
 }
@@ -198,8 +199,6 @@ class AddPersonalExpense {
       response = response.data;//Map<String, dynamic>.from(response.data);
       success = response['success'];
       message = response['message'];
-      data = Map<String, dynamic>.from(response['data']);
-      print('response: '+ message);
     }
     catch(e) {
       print(e);
@@ -231,7 +230,7 @@ class GetPersonalExpense {
       print(data);
     }
     catch(e) {
-      print(e);
+      print(message);
     }
 	}
 }
@@ -241,7 +240,7 @@ class EventDetails {
 
   bool success = false;
   String message = "Network Error";
-  List data = [];
+  Map data = {};
 
   EventDetails(String event_i) {
     event_id = event_i;
@@ -272,7 +271,7 @@ class GetNotificationDetails {
   String message = "Network Error";
   List data = [];
 
-  NotificationDetails(String user_phone_n) {
+  GetNotificationDetails(String user_phone_n) {
     user_phone_no = user_phone_n;
   }
 

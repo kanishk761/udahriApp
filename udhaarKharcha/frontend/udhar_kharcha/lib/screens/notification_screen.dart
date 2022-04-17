@@ -1,4 +1,6 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:udhar_kharcha/controllers/requests.dart';
 
 class NotificationScreen extends StatefulWidget {
   const NotificationScreen({Key? key}) : super(key: key);
@@ -8,6 +10,32 @@ class NotificationScreen extends StatefulWidget {
 }
 
 class _NotificationScreenState extends State<NotificationScreen> {
+
+  String _username = FirebaseAuth.instance.currentUser?.displayName ?? '';
+  String _phoneNumber = FirebaseAuth.instance.currentUser?.phoneNumber ?? '';
+
+  List _notifications = [];
+
+  getNotifications() async{
+    try {
+      GetNotificationDetails obj = GetNotificationDetails(_phoneNumber);
+      await obj.sendQuery();
+      print(obj.data);
+      setState(() {
+        if(obj.success)
+          _notifications = obj.data;
+      });
+    }
+    catch(e) {
+      print('failed to get notifications');
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    getNotifications();
+  }
 
 
   @override
@@ -33,7 +61,6 @@ class _NotificationScreenState extends State<NotificationScreen> {
       ),
 
       body: ScreenBody(context),
-
     );
   }
 
@@ -43,7 +70,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
       child: ListView.builder(
         physics: AlwaysScrollableScrollPhysics(),
         scrollDirection: Axis.vertical,
-        itemCount: 5,
+        itemCount: _notifications.length,
         itemBuilder: (context, index) {
           return Card(
             elevation: 0,
@@ -53,10 +80,10 @@ class _NotificationScreenState extends State<NotificationScreen> {
             child: ListTile(
               isThreeLine: true,
               title : Text(
-                'Notification body'
+                _notifications[index][0]
               ),
               subtitle: Text(
-                'asdfjkjasdfkjasdfajkdasdfadsfasdfadsfadsfawewfajkdsfhhakjdfhadjfkha',
+                _notifications[index][1],
                 style: TextStyle(
                   fontSize: 18
                 ),

@@ -2,7 +2,7 @@ from turtle import color
 import firebase_admin
 from firebase_admin import credentials, messaging
 
-credential = credentials.Certificate('/home/shubham/Desktop/Desktop/Courses/Computer-System-Design/Project/udahriApp/udhaarKharcha/backend/firebase.json')
+credential = credentials.Certificate(r'C:\Users\saran\Desktop\csd\udahriApp\udhaarKharcha\backend\firebase.json')
 firebase_admin.initialize_app(credential)
 
 def sendTokenNotification(fcm_token, title, body, image):

@@ -14,7 +14,8 @@ class AddPersonalExpenseScreen extends StatefulWidget {
 }
 
 class _AddPersonalExpenseScreenState extends State<AddPersonalExpenseScreen> {
-  String _user = FirebaseAuth.instance.currentUser?.displayName ?? '';
+
+  String _username = FirebaseAuth.instance.currentUser?.displayName ?? '';
   String _phoneNumber = FirebaseAuth.instance.currentUser?.phoneNumber ?? '';
 
 
@@ -28,9 +29,9 @@ class _AddPersonalExpenseScreenState extends State<AddPersonalExpenseScreen> {
   addPersonalExpense() async {
     try {
       AddPersonalExpense obj = AddPersonalExpense(
-          _phoneNumber,
-          double.parse(_controllerAmount.text),
-          _controllerDesc.text
+        _phoneNumber,
+        double.parse(_controllerAmount.text),
+        _controllerDesc.text
       );
       await obj.sendQuery();
     }

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:udhar_kharcha/screens/addDebt_screen.dart';
 import 'package:udhar_kharcha/screens/addPersonalExpense_screen.dart';
 import 'package:udhar_kharcha/screens/details_screen.dart';
+import 'package:udhar_kharcha/screens/event_details_screen.dart';
 import 'package:udhar_kharcha/screens/navigationScreen.dart';
 import 'package:udhar_kharcha/screens/login_screen.dart';
 import 'package:udhar_kharcha/screens/newAddDebt.dart';
@@ -140,7 +141,6 @@ class MyApp extends StatelessWidget {
         '/signup' : (context) => SignupScreen(),
         '/home' : (context) => NavigationScreen(),
         '/add' : (context) => SplitBillsScreen(),
-        '/details' : (context) => U2UDetails(),
         '/notify' : (context) => NotificationScreen(),
         '/addPersonal' : (context) => AddPersonalExpenseScreen(),
       },
