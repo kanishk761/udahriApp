@@ -16,7 +16,7 @@ from notification import sendTokenNotification
 app = Flask(__name__)
 
 ssl_context = SSLContext(PROTOCOL_TLSv1_2)
-ssl_context.load_verify_locations('/home/shubham/Desktop/Desktop/Courses/Computer-System-Design/Project/udahriApp/udhaarKharcha/backend/sf-class2-root.crt')
+ssl_context.load_verify_locations(r'C:\Users\saran\Desktop\csd\udahriApp\udhaarKharcha\backend\sf-class2-root.crt')
 ssl_context.verify_mode = CERT_REQUIRED
 auth_provider = PlainTextAuthProvider(username='Admin-at-442245796012', password='Zo2yw3zb//WD1muANf3BPM9ZhzmO2jjDCczR+NsOx/4=')
 cluster = Cluster(['cassandra.ap-south-1.amazonaws.com'], ssl_context=ssl_context, auth_provider=auth_provider, port=9142)
@@ -439,14 +439,20 @@ def getUdhars():
     
     user_udhars = dict()
 
+    query = 'SELECT phone_no, username FROM udhar_kharcha.user_profile WHERE user_id = %s'
+
     for user in r1.current_rows:
-        user_udhars[user[0]] = user[1]
+        result = session.execute(query, [user[0]])
+        result = result.one()
+        user_udhars[result.phone_no] = [result.username, user[1]]
     
     for user in r2.current_rows:
+        result = session.execute(query, [user[0]])
+        result = result.one()
         if user[0] in user_udhars:
-            user_udhars[user[0]] = user_udhars[user[0]] - user[1]
+            user_udhars[result.phone_no] = [result.username, user_udhars[user[0]] - user[1]]
         else:
-            user_udhars[user[0]] = -user[1]
+            user_udhars[result.phone_no] = [result.username, -user[1]]  
 
     return _response(True, "All udhar for input user", user_udhars)
 
