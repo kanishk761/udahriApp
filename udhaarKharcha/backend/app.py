@@ -16,7 +16,7 @@ from notification import sendTokenNotification
 app = Flask(__name__)
 
 ssl_context = SSLContext(PROTOCOL_TLSv1_2)
-ssl_context.load_verify_locations('/home/shubham/Desktop/Desktop/Courses/Computer-System-Design/Project/udahriApp/udhaarKharcha/backend/sf-class2-root.crt')
+ssl_context.load_verify_locations(r'C:\Users\saran\Desktop\csd\udahriApp\udhaarKharcha\backend\sf-class2-root.crt')
 ssl_context.verify_mode = CERT_REQUIRED
 auth_provider = PlainTextAuthProvider(username='Admin-at-442245796012', password='Zo2yw3zb//WD1muANf3BPM9ZhzmO2jjDCczR+NsOx/4=')
 cluster = Cluster(['cassandra.ap-south-1.amazonaws.com'], ssl_context=ssl_context, auth_provider=auth_provider, port=9142)
@@ -191,7 +191,8 @@ def get_pair_details():
 
             udhar_between_them = result.current_rows[0][1][pair_id_user_id_to_user_id_from]
             event_name = result.current_rows[0][0]
-            event_data = (events_id_take_list[i], event_name, udhar_between_them, True) #final field True represents that amount has to be TAKEN
+            event_time = timestamp1.strftime("%b %d, %Y")
+            event_data = (events_id_take_list[i], event_name, udhar_between_them, event_time, True) #final field True represents that amount has to be TAKEN
 
             response_data.append(event_data)
             i += 1
@@ -201,29 +202,32 @@ def get_pair_details():
 
             udhar_between_them = result.current_rows[0][1][pair_id_user_id_from_user_id_to]
             event_name = result.current_rows[0][0]
-            event_data = (events_id_give_list[j], event_name, udhar_between_them, False) #final field False represents that amount has to be GIVEN
+            event_time = timestamp2.strftime("%b %d, %Y")
+            event_data = (events_id_give_list[j], event_name, udhar_between_them, event_time, False) #final field False represents that amount has to be GIVEN
 
             response_data.append(event_data)
             j += 1
         
     while i < len(events_id_take_list):
-        query = 'SELECT event_detail,pairwise_udhar FROM udhar_kharcha.event_details WHERE event_id = %s'
+        query = 'SELECT event_detail,pairwise_udhar,event_time FROM udhar_kharcha.event_details WHERE event_id = %s'
         result = session.execute(query, [events_id_take_list[i]])
 
         udhar_between_them = result.current_rows[0][1][pair_id_user_id_to_user_id_from]
         event_name = result.current_rows[0][0]
-        event_data = (events_id_take_list[i], event_name, udhar_between_them, True) #final field True represents that amount has to be TAKEN
+        event_time = result.current_rows[0][2].strftime("%b %d, %Y")
+        event_data = (events_id_take_list[i], event_name, udhar_between_them, event_time, True) #final field True represents that amount has to be TAKEN
 
         response_data.append(event_data)
         i += 1
 
     while j < len(events_id_give_list):
-        query = 'SELECT event_detail,pairwise_udhar FROM udhar_kharcha.event_details WHERE event_id = %s'
+        query = 'SELECT event_detail,pairwise_udhar,event_time FROM udhar_kharcha.event_details WHERE event_id = %s'
         result = session.execute(query, [events_id_give_list[j]])
 
         udhar_between_them = result.current_rows[0][1][pair_id_user_id_from_user_id_to]
         event_name = result.current_rows[0][0]
-        event_data = (events_id_give_list[j], event_name, udhar_between_them, False) #final field False represents that amount has to be GIVEN
+        event_time = result.current_rows[0][2].strftime("%b %d, %Y")
+        event_data = (events_id_give_list[j], event_name, udhar_between_them, event_time, False) #final field False represents that amount has to be GIVEN
 
         response_data.append(event_data)
         j += 1
@@ -479,14 +483,28 @@ def bill_split():
     if participants_paid_amount != bill_amount:
         return _response(False, 'inconsistent amounts', '')
 
+    not_available = list()
+
     for user_phone_no in participants_amount_on_bill:
-        count = 0
-        while count < 1:
-            response = personal_expense(user_phone_no, participants_amount_on_bill[user_phone_no], event_name)
-            # if response["success"]:
-            #     count = 4
-            print(json.loads(response.response[0].decode("utf-8"))['success'])
-            count += 1
+        user_id = hashlib.md5(user_phone_no.encode()).hexdigest()
+
+        query = "SELECT user_id FROM udhar_kharcha.user_profile WHERE user_id = %s"
+        response = session.execute(query, [user_id])
+
+        if len(response.current_rows) == 0:
+            not_available.append(user_phone_no)
+            
+    if len(not_available) != 0:
+        return _response(False, "Some users involved in the split are not signed up", not_available)
+
+    # for user_phone_no in participants_amount_on_bill:
+    #     count = 0
+    #     while count < 5:
+    #         response = add_personal_expense(user_phone_no, participants_amount_on_bill[user_phone_no], event_name)
+    #         response = json.loads(response.response[0].decode("utf-8"))
+    #         if response["success"]:
+    #             count = 4
+    #         count += 1
 
     
     # udhars_takers = []
@@ -569,7 +587,7 @@ def bill_split():
     #                 udhar_givers[udhar_givers_participants[i][j]] = 0
 
     #             title = 'New Debt'
-    #             body = '{0} ({1}) requested you to pay {2} for {3} on {4}'.format(from_user_name, from_user_phone_no, str(-pairwise_udhar[pair_id]), event_name, event_time.strftime("%b %d, %Y"))
+    #             body = '{0} ({1}) requested you to pay Rs. {2} for {3} on {4}'.format(from_user_name, from_user_phone_no, str(-pairwise_udhar[pair_id]), event_name, event_time.strftime("%b %d, %Y"))
     #             image = 'https://aseemrastogi2.files.wordpress.com/2014/01/debt-management.jpg'
 
 
@@ -637,17 +655,7 @@ def getUdhars():
 
 
 
-@app.route('/personal_expense', methods=["POST", "GET"])
-def personal_expense(user_phone_no = None, amount = None, event_detail = None):
-    if request.method == "POST":
-        input = request.get_json()
-        try:
-            user_phone_no = input["user_phone_no"]
-            amount = input["amount"]
-            event_detail = input["event_detail"]
-        except:
-            return _response(False, 'incorrect format', '')
-
+def add_personal_expense(user_phone_no = None, amount = None, event_detail = None):
     event_time = datetime.now()
     event_id = hashlib.md5(event_time.strftime("%m/%d/%Y%H:%M:%S.%f").encode()).hexdigest()
 
@@ -666,6 +674,19 @@ def personal_expense(user_phone_no = None, amount = None, event_detail = None):
         return _response(True, 'Personal Expense Added', '')
     except:
         return _response(False, 'DB error', '')
+
+
+@app.route('/personal_expense', methods=["POST"])
+def personal_expense():
+    input = request.get_json()
+    try:
+        user_phone_no = input["user_phone_no"]
+        amount = input["amount"]
+        event_detail = input["event_detail"]
+    except:
+        return _response(False, 'incorrect format', '')
+
+    return add_personal_expense(user_phone_no, amount, event_detail)
 
 
 
@@ -716,7 +737,19 @@ def event_details():
         response = session.execute(query, [event_id])
         response = response.one()
 
-        data = {'event_bill': dict(response.event_bill), 'event_payers': dict(response.event_payers)}
+        phone_to_username = dict()
+
+        query = "SELECT username FROM udhar_kharcha.user_profile WHERE user_id = %s"
+
+        for user_phone_no in dict(response.event_bill):
+            user_id = hashlib.md5(user_phone_no.encode()).hexdigest()
+            response_ = session.execute(query, [user_id])
+            try:
+                phone_to_username[user_phone_no] = response_.one().username
+            except:
+                pass
+
+        data = {'event_bill': dict(response.event_bill), 'event_payers': dict(response.event_payers), 'phone_to_username': phone_to_username}
 
         dictionary = {'success' : True , 'message' : "Event details of input event" , 'data' : data}
         return dictionary
