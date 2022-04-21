@@ -4,14 +4,13 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:udhar_kharcha/controllers/requests.dart';
+import 'package:udhar_kharcha/screens/loading.dart';
 import 'package:udhar_kharcha/screens/tag_widget.dart';
 import 'package:intl/intl.dart';
 
 
 class PersonalExpenseScreen extends StatefulWidget {
-  PersonalExpenseScreen({Key? key, required this.expenses}) : super(key: key);
-
-  List expenses;
+  const PersonalExpenseScreen({Key? key}) : super(key: key);
 
   @override
   State<PersonalExpenseScreen> createState() => _PersonalExpenseScreenState();
@@ -27,29 +26,63 @@ class _PersonalExpenseScreenState extends State<PersonalExpenseScreen> {
     final String formatted = formatter.format(HttpDate.parse(date));
     return formatted;
   }
+
+  bool personalExpenseLoading = true;
+
+
+  // get personal expenses
+  List expenses = [];  // List of lists of 3
+  getPersonalExpense() async{
+    try {
+      setState(() {
+        personalExpenseLoading = true;
+      });
+      GetPersonalExpense obj = GetPersonalExpense(_phoneNumber);
+      await obj.sendQuery();
+      setState(() {
+        if(obj.success)
+          expenses = obj.data;
+
+        personalExpenseLoading = false;
+      });
+    }
+    catch (e) {
+      print('Failed to get personal expense');
+    }
+  }
+
+
+  @override
+  void initState() {
+    print('personl init');
+    getPersonalExpense();
+    super.initState();
+  }
   
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(10),
-      child: RefreshIndicator(
-        onRefresh: () async{
-          GetPersonalExpense obj = GetPersonalExpense(_phoneNumber);
-          await obj.sendQuery();
-          setState(() {
-            widget.expenses = obj.data;
-          });
-        },
-        child: ListView.builder(
-          physics: AlwaysScrollableScrollPhysics(),
-          scrollDirection: Axis.vertical,
-          itemCount: widget.expenses.length,
-          itemBuilder: (context, index) {
-            String event_desc = widget.expenses[index][0];
-            String date = widget.expenses[index][1];
-            double event_amount = widget.expenses[index][2];
-            return Card(
+    return Scaffold(
+      backgroundColor: Color(0xfff7f6fb),
+      body: personalExpenseLoading ? ShimmerLoading() : Padding(
+        padding: const EdgeInsets.all(10),
+        child: RefreshIndicator(
+          onRefresh: () async{
+            GetPersonalExpense obj = GetPersonalExpense(_phoneNumber);
+            await obj.sendQuery();
+            setState(() {
+              expenses = obj.data;
+            });
+          },
+          child: ListView.builder(
+            physics: AlwaysScrollableScrollPhysics(),
+            scrollDirection: Axis.vertical,
+            itemCount: expenses.length,
+            itemBuilder: (context, index) {
+              String event_desc = expenses[index][0];
+              String date = expenses[index][1];
+              double event_amount = expenses[index][2];
+              return Card(
                 elevation: 0,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
@@ -97,11 +130,21 @@ class _PersonalExpenseScreenState extends State<PersonalExpenseScreen> {
                     ),
                   ],
                 )
-            );
-          }
-        )
+              );
+            }
+          )
+        ),
       ),
+      floatingActionButton :  FloatingActionButton.extended(
+          onPressed: () async{
+            await Navigator.pushNamed(context, '/addPersonal');
+            getPersonalExpense();
+          },
+          label: const Text('Add Personal Expense'),
+          icon: const Icon(Icons.add),
+        )
     );
+
   }
 }
 

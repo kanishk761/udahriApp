@@ -25,7 +25,7 @@ class TagWidget extends StatelessWidget {
             text: TextSpan(
                 text: '${emoji} ${label}',
                 style: TextStyle(
-                    fontSize: 8,
+                    fontSize: 10,
                     color: Colors.purple,
                     fontFamily: 'Nunito'
                 )

@@ -115,6 +115,15 @@ class _U2UDetailsState extends State<U2UDetails> {
           )
       ),
       body: loading ? Center(child: CircularProgressIndicator()) : detailBody(),
+
+      floatingActionButton: widget.amount < 0 ? FloatingActionButton.extended(
+        onPressed: (){},
+        icon: Icon(
+            Icons.handshake
+        ),
+        label: Text('Settle')
+      )
+      : Container(),
     );
   }
 
@@ -173,7 +182,7 @@ class _U2UDetailsState extends State<U2UDetails> {
           borderRadius: BorderRadius.circular(10),
         ),
         child: Container(
-          padding: EdgeInsets.fromLTRB(20, 10, 20, ((!element.isApproved && element.willGiveMoney) ? 0 : 20)),
+          padding: EdgeInsets.fromLTRB(20, 10, 20, ((!element.isApproved && element.willGiveMoney) ? 0 : 15)),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -182,152 +191,168 @@ class _U2UDetailsState extends State<U2UDetails> {
                   TagWidget(emoji: '📅', label: '17 Jul' ,width: 60,),
                   SizedBox(width: 5,),
                   element.willGiveMoney ? TagWidget(emoji: '💰', label: 'You took \u{20B9}${element.amount.abs()}' ,width: 90,) :
-                  TagWidget(emoji: '💸', label: 'You gave \u{20B9}${element.amount.abs()}' ,width: 90,),
+                  TagWidget(emoji: '💸', label: 'You gave \u{20B9}${element.amount.abs()}' ,width: 100,),
                   SizedBox(width: 5,),
-                  element.isApproved ? TagWidget(emoji: '👍', label: 'Approved', width: 90) :
+                  element.isApproved ? TagWidget(emoji: '👍', label: 'Approved', width: 70) :
                   TagWidget(emoji: '⏳', label: 'Pending', width: 60)
                 ],
               ),
-              SizedBox(height: 5,),
+              SizedBox(height: 8,),
               Text(
                 element.name,
                 style: TextStyle(
-                    fontSize: 25,
-                    fontWeight: FontWeight.bold
+                    fontSize: 22,
+                    fontWeight: FontWeight.w200
                 ),
               ),
 
               Divider(
                   color: Colors.grey[300]
               ),
+              SizedBox(
+                height: 10,
+              ),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  Column(
-                    children: [
-                      Container(
-                          width: 36,
-                          height: 36,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                          ),
-                          child: CircleAvatar(
-                              child: Text('Y',
-                                  style: TextStyle(color: Colors.white)
-                              ),
-                              backgroundColor: _colors[Random().nextInt(_colors.length)]
-                          )
-                      ),
-                      SizedBox(height: 5,),
-                      Text('You'),
-                    ],
-                  ),
-                  Column(
-                    children: [
-                      Row(
-                        children: !element.willGiveMoney ? [
-                          Icon(Icons.arrow_forward_ios_rounded,
-                            size: 10,
-                          ),
-                          Icon(Icons.arrow_forward_ios_rounded,
-                            size: 10,
-                          ),
-                          Icon(Icons.arrow_forward_ios_rounded,
-                            size: 10,
-                          ),
-                        ] : [
-                          Icon(Icons.arrow_back_ios_rounded,
-                            size: 10,
-                          ),
-                          Icon(Icons.arrow_back_ios_rounded,
-                            size: 10,
-                          ),
-                          Icon(Icons.arrow_back_ios_rounded,
-                            size: 10,
-                          ),
-                        ]
-                        ,
-                      ),
-                      Text(
-                        '\u{20B9} ${element.amount}',
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.bold
+                  Expanded(
+                    child: Column(
+                      children: [
+                        Container(
+                            width: 36,
+                            height: 36,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                            ),
+                            child: CircleAvatar(
+                                child: Text('Y',
+                                    style: TextStyle(color: Colors.white)
+                                ),
+                                backgroundColor: _colors[Random().nextInt(_colors.length)]
+                            )
                         ),
-                      )
-                    ],
+                        SizedBox(height: 5,),
+                        Text('You'),
+                      ],
+                    ),
                   ),
-                  Column(
-                    children: [
-                      Container(
-                          width: 36,
-                          height: 36,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
+                  Expanded(
+                    child: Column(
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: !element.willGiveMoney ? [
+                            Icon(Icons.arrow_right,
+                              size: 20,
+                            ),
+                            Icon(Icons.arrow_right,
+                              size: 20,
+                            ),
+                            Icon(Icons.arrow_right,
+                              size: 20,
+                            ),
+                          ] : [
+                            Icon(Icons.arrow_left,
+                              size: 20,
+                            ),
+                            Icon(Icons.arrow_left,
+                              size: 20,
+                            ),
+                            Icon(Icons.arrow_left,
+                              size: 20,
+                            ),
+                          ]
+                        ),
+                        Text(
+                          '\u{20B9} ${element.amount}',
+                          style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.bold
                           ),
-                          child: CircleAvatar(
-                              child: Text(
-                                widget.name_to.isNotEmpty ? widget.name_to[0] : '',
-                                style: TextStyle(color: Colors.white)
-                              ),
-                              backgroundColor: _colors[Random().nextInt(_colors.length)]
-                          )
-                      ),
-                      SizedBox(height: 5,),
-                      Text(
-                        widget.name_to,
-                        overflow: TextOverflow.fade,
-                        softWrap: false,
-                        maxLines: 1,
-                      ),
-                    ],
+                        )
+                      ],
+                    ),
                   ),
+                  Expanded(
+                    child: Column(
+                      children: [
+                        Container(
+                            width: 34,
+                            height: 34,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                            ),
+                            child: CircleAvatar(
+                                child: Text(
+                                    widget.name_to.isNotEmpty ? widget.name_to[0] : '',
+                                    style: TextStyle(color: Colors.white)
+                                ),
+                                backgroundColor: _colors[Random().nextInt(_colors.length)]
+                            )
+                        ),
+                        SizedBox(height: 5,),
+                        Text(
+                          widget.name_to,
+                          overflow: TextOverflow.fade,
+                          softWrap: false,
+                          maxLines: 1,
+                        ),
+                      ],
+                    ),
+                  )
                 ],
               ),
 
+              // Approve and Reject UI
               (!element.isApproved && element.willGiveMoney) ?
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Expanded(
                     child: TextButton(
-                        onPressed: () async{
-                          try{
-                            ApproveRejectUdhar obj = ApproveRejectUdhar(
-                                _phoneNumber,
-                                widget.phone_to,
-                                element.id,
-                                true
-                            );
-                            await obj.sendQuery();
-                            if(obj.success){
-                              print(widget.amount);
-                              widget.amount -= element.amount;
-                              await getData();
-                            }
-                            else{
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text('Something went wrong'),duration: Duration(seconds: 1))
-                              );
-                            }
+                      child: Text(
+                        'Approve',
+                        style: TextStyle(
+                          color: Colors.green,
+                        ),
+                      ),
+                      onPressed: () async{
+                        try{
+                          ApproveRejectUdhar obj = ApproveRejectUdhar(
+                              _phoneNumber,
+                              widget.phone_to,
+                              element.id,
+                              true
+                          );
+                          await obj.sendQuery();
+                          if(obj.success){
+                            print(widget.amount);
+                            widget.amount -= element.amount;
+                            await getData();
                           }
-                          catch(e) {
+                          else{
                             ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text('Something went very wrong'),duration: Duration(seconds: 1))
+                                SnackBar(content: Text('Something went wrong'),duration: Duration(seconds: 1))
                             );
                           }
-                        },
-                        child: Text(
-                            'Approve',
-                          style: TextStyle(
-                            color: Colors.green,
-                          ),
-                        )
+                        }
+                        catch(e) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('Something went very wrong'),duration: Duration(seconds: 1))
+                          );
+                        }
+                      },
                     ),
                   ),
 
                   Expanded(
                     child: TextButton(
+                      child: Text(
+                        'Reject',
+                        style: TextStyle(
+                          color: Colors.red,
+                        ),
+                      ),
                       onPressed: () async {
                         try {
                           ApproveRejectUdhar obj = ApproveRejectUdhar(
@@ -338,7 +363,6 @@ class _U2UDetailsState extends State<U2UDetails> {
                           );
                           await obj.sendQuery();
                           if (obj.success) {
-
                             await getData();
                           }
                           else {
@@ -355,17 +379,10 @@ class _U2UDetailsState extends State<U2UDetails> {
                           );
                         }
                       },
-                      child: Text(
-                        'Reject',
-                        style: TextStyle(
-                          color: Colors.red,
-                        ),
-                      )
                     ),
                   ),
                 ],
               ) : Container(),
-
             ],
           ),
         ),
