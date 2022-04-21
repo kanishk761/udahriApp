@@ -30,6 +30,56 @@ def _response(_success, _message, _data):
 def home():
     return 'Home'
 
+@app.route('/delete')
+def delete():
+    query = "SELECT event_id FROM udhar_kharcha.event_details"
+    result = session.execute(query)
+    for id in result.current_rows:
+        query = SimpleStatement("DELETE FROM udhar_kharcha.event_details WHERE event_id = %s", consistency_level = ConsistencyLevel.LOCAL_QUORUM)
+        result = session.execute(query, [id[0]])
+
+    # query = "SELECT user_id FROM udhar_kharcha.fcm_mapping"
+    # result = session.execute(query)
+    # for id in result.current_rows:
+    #     query = SimpleStatement("DELETE FROM udhar_kharcha.fcm_mapping WHERE user_id = %s", consistency_level = ConsistencyLevel.LOCAL_QUORUM)
+    #     result = session.execute(query, [id[0]])
+
+    query = "SELECT notification_id FROM udhar_kharcha.notification_details"
+    result = session.execute(query)
+    for id in result.current_rows:
+        query = SimpleStatement("DELETE FROM udhar_kharcha.notification_details WHERE notification_id = %s", consistency_level = ConsistencyLevel.LOCAL_QUORUM)
+        result = session.execute(query, [id[0]])
+
+    query = "SELECT user_id FROM udhar_kharcha.personal_expenses"
+    result = session.execute(query)
+    for id in result.current_rows:
+        query = SimpleStatement("DELETE FROM udhar_kharcha.personal_expenses WHERE user_id = %s", consistency_level = ConsistencyLevel.LOCAL_QUORUM)
+        result = session.execute(query, [id[0]])
+
+    query = "SELECT pair_id FROM udhar_kharcha.split_bills"
+    result = session.execute(query)
+    for id in result.current_rows:
+        query = SimpleStatement("DELETE FROM udhar_kharcha.split_bills WHERE pair_id = %s", consistency_level = ConsistencyLevel.LOCAL_QUORUM)
+        result = session.execute(query, [id[0]])
+
+    query = "SELECT transaction_id FROM udhar_kharcha.transaction_history"
+    result = session.execute(query)
+    for id in result.current_rows:
+        query = SimpleStatement("DELETE FROM udhar_kharcha.transaction_history WHERE transaction_id = %s", consistency_level = ConsistencyLevel.LOCAL_QUORUM)
+        result = session.execute(query, [id[0]])
+
+    query = "SELECT user_id FROM udhar_kharcha.user_notifications_mapping"
+    result = session.execute(query)
+    for id in result.current_rows:
+        query = SimpleStatement("DELETE FROM udhar_kharcha.user_notifications_mapping WHERE user_id = %s", consistency_level = ConsistencyLevel.LOCAL_QUORUM)
+        result = session.execute(query, [id[0]])
+
+    # query = "SELECT user_id FROM udhar_kharcha.user_profile"
+    # result = session.execute(query)
+    # for id in result.current_rows:
+    #     query = SimpleStatement("DELETE FROM udhar_kharcha.user_profile WHERE user_id = %s", consistency_level = ConsistencyLevel.LOCAL_QUORUM)
+    #     result = session.execute(query, [id[0]])
+    return 'uerj'
 
 
 @app.route('/signup', methods = ["POST"])
@@ -106,7 +156,6 @@ def get_pair_details():
     r1 = session.execute(q1, [pair_id_user_id_to_user_id_from])
 
     events_id_take_list = []
-    print(r1.current_rows[0])
     if len(r1.current_rows) > 0 and r1.current_rows[0][0] is not None:
         events_id_take_list = r1.current_rows[0][0]
 
@@ -119,25 +168,20 @@ def get_pair_details():
     r2 = session.execute(q2, [pair_id_user_id_from_user_id_to])
 
     events_id_give_list = []
-    print(r2.current_rows)
     if len(r2.current_rows) > 0 and r2.current_rows[0][0] is not None:
-        print("jkkj")
         events_id_give_list = r2.current_rows[0][0]
     
 
     i = 0
     j = 0
-    print(events_id_give_list, events_id_take_list)
     while i < len(events_id_take_list) and j < len(events_id_give_list):
         q1 = 'SELECT event_time FROM udhar_kharcha.event_details WHERE event_id = %s'
         r1 = session.execute(q1, [events_id_take_list[i]])
 
-        print(events_id_give_list[i])
 
         q2 = 'SELECT event_time FROM udhar_kharcha.event_details WHERE event_id = %s'
         r2 = session.execute(q2, [events_id_give_list[j]])
 
-        print(len(r1.current_rows))
         timestamp1 = r1.current_rows[0][0]
         timestamp2 = r2.current_rows[0][0]
 
@@ -208,7 +252,9 @@ def approve_udhar():
     pair_concat = user_phone_to + user_phone_from
     pair_id = hashlib.md5(pair_concat.encode()).hexdigest()
 
-    print(pair_id)
+    # reverse_pair_concat = user_phone_from + user_phone_to
+    # reverse_pair_id = hashlib.md5(reverse_pair_concat.encode()).hexdigest()
+
     
     query = 'SELECT pairwise_udhar, event_detail, event_time FROM udhar_kharcha.event_details WHERE event_id = %s'
     result = session.execute(query, [event_id])
@@ -221,7 +267,6 @@ def approve_udhar():
     except:
         return _response(False, 'No such event', '')
 
-    print(pairwise_udhar)
 
     try:
         if pairwise_udhar[pair_id] < 0:
@@ -233,18 +278,25 @@ def approve_udhar():
 
             current_amount = result.current_rows[0][0]
 
+            # query = 'SELECT total_amount FROM udhar_kharcha.split_bills WHERE pair_id = %s'
+            # result = session.execute(query, [reverse_pair_id])
+
+            # reverse_current_amount = result.current_rows[0][0]
+
+
             query = SimpleStatement('UPDATE udhar_kharcha.split_bills SET total_amount = %s WHERE pair_id = %s', consistency_level = ConsistencyLevel.LOCAL_QUORUM)
             result = session.execute(query, [current_amount - pairwise_udhar[pair_id], pair_id])
+
+            # query = SimpleStatement('UPDATE udhar_kharcha.split_bills SET total_amount = %s WHERE pair_id = %s', consistency_level = ConsistencyLevel.LOCAL_QUORUM)
+            # result = session.execute(query, [reverse_current_amount - pairwise_udhar[pair_id], reverse_pair_id])
         else:
             return _response(True, 'Already approved', '')
     except Exception as e:
-        print(e)
         return _response(False, 'No such pair in the event', '')
 
     from_user_id = hashlib.md5(user_phone_from.encode()).hexdigest()
     to_user_id = hashlib.md5(user_phone_to.encode()).hexdigest()
 
-    print("here")
     try:
         query = 'SELECT phone_no, username FROM udhar_kharcha.user_profile WHERE user_id = %s'
         result = session.execute(query, [from_user_id])
@@ -284,7 +336,6 @@ def reject_udhar():
     pair_concat = user_phone_to + user_phone_from
     pair_id = hashlib.md5(pair_concat.encode()).hexdigest()
 
-    print(pair_id)
     
     query = 'SELECT pairwise_udhar, event_detail, event_time FROM udhar_kharcha.event_details WHERE event_id = %s'
     result = session.execute(query, [event_id])
@@ -384,8 +435,6 @@ def bill_split():
     udhar_givers_participants = min_transactions_for_cur_bill.get_final_udhar_giver_groups() 
     udhar_takers_participants = min_transactions_for_cur_bill.get_final_udhar_taker_groups() 
 
-    print(udhar_givers_participants)
-    print(udhar_takers_participants)
 
 
     pairwise_udhar = dict()
@@ -397,8 +446,6 @@ def bill_split():
         k = 0
         for j in range(len(udhar_givers_participants[i])):
             while udhar_givers[udhar_givers_participants[i][j]] > 0:
-                print(udhar_givers)
-                print(udhars_takers)
                 user_to = users_givers[udhar_givers_participants[i][j]]
                 user_from = users_takers[udhar_takers_participants[i][k]]
 
@@ -415,7 +462,6 @@ def bill_split():
                     to_user_id = hashlib.md5(users_givers[udhar_givers_participants[i][j]].encode()).hexdigest()
                     from_user_id = hashlib.md5(users_takers[udhar_takers_participants[i][k]].encode()).hexdigest()
 
-                    print(users_givers[udhar_givers_participants[i][j]], users_takers[udhar_takers_participants[i][k]])
 
                     query = SimpleStatement("INSERT INTO udhar_kharcha.split_bills (event_ids, to_user_id, pair_id, from_user_id, total_amount) VALUES (%s, %s, %s, %s, %s) IF NOT EXISTS", consistency_level = ConsistencyLevel.LOCAL_QUORUM)
                     results = session.execute(query, ([event_id], to_user_id, pair_id, from_user_id, 0))
@@ -438,7 +484,6 @@ def bill_split():
                 except:
                     return _response(False, 'DB error', '')
 
-                print(udhar_givers[udhar_givers_participants[i][j]], udhars_takers[udhar_takers_participants[i][k]])
                 
                 if udhar_givers[udhar_givers_participants[i][j]] >= udhars_takers[udhar_takers_participants[i][k]]:
                     pairwise_udhar[pair_id] = -udhars_takers[udhar_takers_participants[i][k]]
@@ -453,12 +498,11 @@ def bill_split():
                 body = '{0} - {1} requested you to pay {2}'.format(from_user_name, from_user_phone_no, str(-pairwise_udhar[pair_id]))
                 image = 'https://aseemrastogi2.files.wordpress.com/2014/01/debt-management.jpg'
 
-                print(to_fcm_token)
 
                 sendTokenNotification(to_fcm_token, title, body, image)
                 # redirect(url_for('notification_details', user_phone_no = user_from, notification_title = title, notification_body = body))
                 notification_details(user_from, title, body)
-    
+
     try:
         query = SimpleStatement('INSERT INTO udhar_kharcha.event_details (event_detail, event_id, pairwise_udhar, event_payers, event_bill, event_time) VALUES (%s, %s, %s, %s, %s, %s);', consistency_level = ConsistencyLevel.LOCAL_QUORUM)
         session.execute(query, (event_name, event_id, pairwise_udhar, participants_paid, participants_amount_on_bill, event_time))
@@ -504,12 +548,11 @@ def getUdhars():
         result = session.execute(query, [user[0]])
         result = result.one()
         user_udhars[result.phone_no] = [result.username, user[1]]
-    
     for user in r2.current_rows:
         result = session.execute(query, [user[0]])
         result = result.one()
-        if user[0] in user_udhars:
-            user_udhars[result.phone_no] = [result.username, user_udhars[user[0]] - user[1]]
+        if result.phone_no in user_udhars:
+            user_udhars[result.phone_no] = [result.username, user_udhars[result.phone_no][1] - user[1]]
         else:
             user_udhars[result.phone_no] = [result.username, -user[1]]  
 
@@ -615,7 +658,6 @@ def notification_details(user_phone_no, notification_title, notification_body):
     #     except:
     #         return _response(False, 'incorrect format', '')
 
-    print("ijfeioer")
 
     notification_time = datetime.now()
     notification_id = hashlib.md5((user_phone_no+notification_time.strftime("%m/%d/%Y%H:%M:%S.%f")).encode()).hexdigest()
@@ -659,7 +701,6 @@ def get_notification_details():
     try:
         query = SimpleStatement("SELECT notification_body, notification_title, notification_time FROM udhar_kharcha.notification_details WHERE notification_id = %s ALLOW FILTERING", consistency_level = ConsistencyLevel.LOCAL_QUORUM)
         for notification_id in response.one().notification_ids:
-            print(notification_id)
             try:
                 notification_response = session.execute(query, [notification_id])
                 notification_response = notification_response.one()
