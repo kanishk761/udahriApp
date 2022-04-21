@@ -110,7 +110,7 @@ class _SplitBillsScreenState extends State<SplitBillsScreen> {
           ),
           backgroundColor: Color(0xfff7f6fb),
           title: const Text(
-            'Add Udhaar',
+            'Add Udhar',
             style: TextStyle(
                 color: Colors.black
             ),
@@ -224,7 +224,7 @@ class _SplitBillsScreenState extends State<SplitBillsScreen> {
                 flex: 5,
                 child: Column(
                   children: [
-                    TagWidget(emoji: '📞', label: phone, width: 90),
+                    TagWidget(emoji: '📞', label: phone, width: 110),
                     Padding(
                       padding: const EdgeInsets.all(13.0),
                       child: Text(

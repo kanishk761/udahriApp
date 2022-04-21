@@ -72,6 +72,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
         scrollDirection: Axis.vertical,
         itemCount: _notifications.length,
         itemBuilder: (context, index) {
+          index = _notifications.length - index -1;
           return Card(
             elevation: 0,
             shape: RoundedRectangleBorder(
@@ -84,9 +85,6 @@ class _NotificationScreenState extends State<NotificationScreen> {
               ),
               subtitle: Text(
                 _notifications[index][1],
-                style: TextStyle(
-                  fontSize: 18
-                ),
               ),
             ),
           );

@@ -139,7 +139,7 @@ class MyApp extends StatelessWidget {
       //     }
       // },
       routes: {
-        '/' : (context) => FirebaseAuth.instance.currentUser==null ? WelcomeScreen() : notification_clicked ? NotificationScreen() : NavigationScreen(),
+        '/' : (context) => FirebaseAuth.instance.currentUser==null ? WelcomeScreen() : NavigationScreen(),
         '/login' : (context) => Login(),
         '/signup' : (context) => SignupScreen(),
         '/home' : (context) => NavigationScreen(),

@@ -374,6 +374,61 @@ def reject_udhar():
 
     return _response(True, 'Udhar rejected!', '')
 
+
+
+@app.route('/pay', methods = ["POST"])
+def pay():
+    input = request.get_json()
+    try:
+        payer_number = input["payer_number"]
+        reciever_number = input["reciever_number"]
+        amount = input["amount"]
+
+    except:
+        return _response(False, 'incorrect format', '')
+    
+    if amount < 0:
+        return _response(False, 'incorrect format', '')
+    
+    user_id_to_user_id_from_concat = reciever_number + payer_number
+    pair_id_user_id_to_user_id_from = hashlib.md5(user_id_to_user_id_from_concat.encode()).hexdigest()
+
+    q1 = 'SELECT total_amount FROM udhar_kharcha.split_bills WHERE pair_id = %s'
+    r1 = session.execute(q1, [pair_id_user_id_to_user_id_from])
+
+    if len(r1.current_rows) > 0 and r1.current_rows[0][0] is not None:
+        amount_to_be_taken = r1.current_rows[0][0]
+    else:
+        return _response(False,'Data not found in database', '')
+
+
+    user_id_from_user_id_to_concat = payer_number + reciever_number
+    pair_id_user_id_from_user_id_to = hashlib.md5(user_id_from_user_id_to_concat.encode()).hexdigest()
+
+    q2 = 'SELECT total_amount FROM udhar_kharcha.split_bills WHERE pair_id = %s'
+    r2 = session.execute(q2, [pair_id_user_id_from_user_id_to])
+
+    if len(r2.current_rows) > 0 and r2.current_rows[0][0] is not None:
+        amount_to_be_given = r1.current_rows[0][0]
+    else:
+        return _response(False,'Data not found in database', '')
+
+    settle_amount = amount_to_be_given-amount_to_be_taken
+    if settle_amount < 0 or amount > settle_amount:
+        return _response(False,'inconsistent pay', '')
+    
+    try:
+        query = SimpleStatement('UPDATE udhar_kharcha.split_bills SET total_amount = 0 WHERE pair_id = %s', consistency_level = ConsistencyLevel.LOCAL_QUORUM)
+        result = session.execute(query, [pair_id_user_id_to_user_id_from])
+
+        amount_left = settle_amount - amount
+
+        query = SimpleStatement('UPDATE udhar_kharcha.split_bills SET total_amount = %s WHERE pair_id = %s', consistency_level = ConsistencyLevel.LOCAL_QUORUM)
+        result = session.execute(query, [amount_left, pair_id_user_id_from_user_id_to])
+    except:
+        return _response(False, 'DB error', '')
+
+    return _response(True, 'udhar amount settled', '')
     
 
 '''
