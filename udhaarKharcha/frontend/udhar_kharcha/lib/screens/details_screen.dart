@@ -1,3 +1,6 @@
+import 'dart:io';
+
+import 'package:intl/intl.dart';
 import 'package:auto_size_text_field/auto_size_text_field.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
@@ -65,7 +68,7 @@ class _U2UDetailsState extends State<U2UDetails> {
           var data = obj.data.reversed;
           data.forEach((element) {
             _events.add(Event(
-                element[1], element[0], element[2].abs(), (element[2] >= 0), element[3]));
+                element[1], element[0], element[2].abs(), (element[2] >= 0), element[4], element[3]));
           });
         }
         else {
@@ -81,6 +84,12 @@ class _U2UDetailsState extends State<U2UDetails> {
           SnackBar(content: Text('Something went wrong'),duration: Duration(seconds: 1))
       );
     }
+  }
+
+  String parseDate(date) {
+    final DateFormat formatter = DateFormat('dd MMM');
+    final String formatted = formatter.format(HttpDate.parse(date));
+    return formatted;
   }
 
   ScrollController _scrollController = ScrollController();
@@ -285,8 +294,7 @@ class _U2UDetailsState extends State<U2UDetails> {
             children: [
               Row(
                 children: [
-                  // TODO : Date for events
-                  TagWidget(emoji: '📅', label: '17 Jul' ,width: 70,),
+                  TagWidget(emoji: '📅', label: parseDate(element.date) ,width: 70,),
                   SizedBox(width: 5,),
                   element.willGiveMoney ? TagWidget(emoji: '💰', label: 'You took \u{20B9}${element.amount.abs()}' ,width: 120,) :
                   TagWidget(emoji: '💸', label: 'You gave \u{20B9}${element.amount.abs()}' ,width: 120,),

@@ -35,5 +35,6 @@ class Event {
   late double amount;
   late bool isApproved;
   late bool willGiveMoney;
-  Event(this.name,this.id,this.amount,this.isApproved,this.willGiveMoney);
+  late String date;
+  Event(this.name,this.id,this.amount,this.isApproved,this.willGiveMoney,this.date);
 }
