@@ -2,7 +2,7 @@
 import 'package:dio/dio.dart';
 
 var options = BaseOptions(
-  baseUrl: 'http://ec2-35-154-234-121.ap-south-1.compute.amazonaws.com',
+  baseUrl: 'http://ec2-52-66-200-162.ap-south-1.compute.amazonaws.com',
   connectTimeout: 5000,
   receiveTimeout: 3000,
 );
@@ -328,7 +328,6 @@ class ApproveRejectUdhar {
 }
 
 
-// TODO : Settle request
 class SettlePayments {
   late String payer_number;
   late String receiver_number;
