@@ -1,13 +1,12 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:udhar_kharcha/screens/addDebt_screen.dart';
 import 'package:udhar_kharcha/screens/addPersonalExpense_screen.dart';
+import 'package:udhar_kharcha/screens/add_debt_screen.dart';
 import 'package:udhar_kharcha/screens/details_screen.dart';
 import 'package:udhar_kharcha/screens/event_details_screen.dart';
 import 'package:udhar_kharcha/screens/navigationScreen.dart';
 import 'package:udhar_kharcha/screens/login_screen.dart';
-import 'package:udhar_kharcha/screens/newAddDebt.dart';
 import 'package:udhar_kharcha/screens/personal_expense.dart';
 import 'package:udhar_kharcha/screens/signup_screen.dart';
 import 'package:udhar_kharcha/screens/welcome.dart';

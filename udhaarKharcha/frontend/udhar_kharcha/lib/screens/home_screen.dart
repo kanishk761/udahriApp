@@ -34,7 +34,7 @@ class _HomeScreenState extends State<HomeScreen> {
       }
       else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Couldn\'t fetch data'),duration: Duration(seconds: 1),)
+          const SnackBar(content: Text('Could not fetch data'),duration: Duration(seconds: 1),)
         );
       }
     });
@@ -44,10 +44,11 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   void initState() {
+    super.initState();
     print('home init');
     getUdharData();
-    super.initState();
   }
+
 
 
   @override
@@ -55,12 +56,13 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       backgroundColor: Color(0xfff7f6fb),
       body: homeLoading ? ShimmerLoading() : Padding(
-        padding: const EdgeInsets.all(10),
+        padding: const EdgeInsets.fromLTRB(10,0,10,0),
         child: RefreshIndicator(
           onRefresh: () async{
             await getUdharData();
           },
           child: ListView.builder(
+            padding: const EdgeInsets.only(bottom: kFloatingActionButtonMargin + 48),
             physics: AlwaysScrollableScrollPhysics(),
             scrollDirection: Axis.vertical,
             itemCount: persons.keys.length,
@@ -70,7 +72,7 @@ class _HomeScreenState extends State<HomeScreen> {
               double value = persons[key][1];
               return Card(
                 elevation: 0,
-                color: value > 0 ? Colors.green[50] : value < 0 ? Colors.red[50] : Colors.white,
+                color: value > 0 ? Colors.teal[50] : value < 0 ? Colors.red[50] : Colors.white,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
                 ),

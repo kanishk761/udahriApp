@@ -225,7 +225,6 @@ class GetPersonalExpense {
       success = response['success'];
       message = response['message'];
       data = response['data'];
-      print(data);
     }
     on DioError catch(e) {
       print(e.message);
@@ -321,6 +320,39 @@ class ApproveRejectUdhar {
       message = response['message'];
       data = response['data'];
       print(data);
+    }
+    on DioError catch(e) {
+      print(e.message);
+    }
+  }
+}
+
+
+// TODO : Settle request
+class SettlePayments {
+  late String payer_number;
+  late String receiver_number;
+  late double amount;
+
+  bool success = false;
+  String message = "Network Error";
+
+  SettlePayments(String payer_no,String receiver_no,double amt) {
+    payer_number = payer_no;
+    receiver_number = receiver_no;
+    amount = amt;
+  }
+
+  Future<void> sendQuery() async {
+    try {
+      dynamic response = await dio.post('/pay', data: {
+        'payer_number': payer_number,
+        'reciever_number' : receiver_number,
+        'amount' : amount
+      });
+      response = response.data;//Map<String, dynamic>.from(response.data);
+      success = response['success'];
+      message = response['message'];
     }
     on DioError catch(e) {
       print(e.message);

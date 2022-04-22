@@ -123,7 +123,7 @@ class _SplitBillsScreenState extends State<SplitBillsScreen> {
 
   Widget screenBody() {
     return Padding(
-      padding: const EdgeInsets.all(10),
+      padding: const EdgeInsets.fromLTRB(10,0,10,10),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
@@ -170,6 +170,7 @@ class _SplitBillsScreenState extends State<SplitBillsScreen> {
                 setState(() {
                   _controllerEvent.text.isEmpty ? _validate = true : _validate = false;
                 });
+                bool uselessEntry = false;
                 if(!_validate) {
                   double paidTotal = 0 , billTotal = 0;
                   for (int i = 0; i < _splitBillPeople.length; i++) {
@@ -181,8 +182,19 @@ class _SplitBillsScreenState extends State<SplitBillsScreen> {
                       _splitBillPeople[i].billedAmount = double.parse(_controllerBilled[i].text);
                       billTotal += _splitBillPeople[i].billedAmount;
                     }
+                    if(_splitBillPeople[i].paidAmount==0 &&_splitBillPeople[i].billedAmount==0){
+                      uselessEntry = true;
+                      break;
+                    }
                   }
-                  if(paidTotal == billTotal) {
+                  if(uselessEntry){
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Some people are not involved in the event.')
+                      )
+                    );
+                  }
+                  else if(paidTotal!=0 && billTotal!=0 && paidTotal == billTotal) {
                     print('done');
                     _splitBillPeople.forEach((element) {
                       print(element.name);
@@ -196,7 +208,11 @@ class _SplitBillsScreenState extends State<SplitBillsScreen> {
                   else {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                          content: Text('Paid amount and billed amount don\'t match. ')
+                          content: Text(
+                              paidTotal != billTotal ? 'Paid amount and billed amount don\'t match.'
+                                  : paidTotal == 0 ? 'Cannot be zero.'
+                                  : 'Some error occured.'
+                          )
                       )
                     );
                   }
@@ -218,103 +234,103 @@ class _SplitBillsScreenState extends State<SplitBillsScreen> {
       child : Padding(
         padding: const EdgeInsets.fromLTRB(10,10,10,0),
         child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              Flexible(
-                flex: 5,
-                child: Column(
-                  children: [
-                    TagWidget(emoji: '📞', label: phone, width: 110),
-                    Padding(
-                      padding: const EdgeInsets.all(13.0),
-                      child: Text(
-                        name,
-                        overflow: TextOverflow.fade,
-                        maxLines: 1,
-                        softWrap: false,
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            Flexible(
+              flex: 5,
+              child: Column(
+                children: [
+                  TagWidget(emoji: '📞', label: phone, width: 110),
+                  Padding(
+                    padding: const EdgeInsets.all(13.0),
+                    child: Text(
+                      name,
+                      overflow: TextOverflow.fade,
+                      maxLines: 1,
+                      softWrap: false,
+                      style: TextStyle(
+                        fontSize: 20,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            SizedBox(width: 20,),
+
+            Flexible(
+              flex: 4,
+              child: Column(
+                children: [
+                  TagWidget(emoji: '💸', label: 'Paid', width: 50),
+                  Row(
+                    children: [
+                      Text(
+                        '\u{20B9} ',
                         style: TextStyle(
+                          fontWeight: FontWeight.bold,
                           fontSize: 20,
                         ),
                       ),
-                    ),
-                  ],
-                ),
-              ),
-
-              SizedBox(width: 20,),
-
-              Flexible(
-                flex: 4,
-                child: Column(
-                  children: [
-                    TagWidget(emoji: '💸', label: 'Paid', width: 50),
-                    Row(
-                      children: [
-                        Text(
-                          '\u{20B9} ',
+                      Expanded(
+                        child: TextField(
+                          controller: _controllerPaid[index],
+                          keyboardType: TextInputType.number,
+                          textAlign: TextAlign.center,
+                          decoration: InputDecoration(
+                              border: InputBorder.none,
+                              hintText: '0'
+                          ),
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 20,
                           ),
                         ),
-                        Expanded(
-                          child: TextField(
-                            controller: _controllerPaid[index],
-                            keyboardType: TextInputType.number,
-                            textAlign: TextAlign.center,
-                            decoration: InputDecoration(
-                                border: InputBorder.none,
-                                hintText: '0'
-                            ),
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 20,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
+            ),
 
-              SizedBox(width: 20,),
+            SizedBox(width: 20,),
 
-              Flexible(
-                flex: 4,
-                child: Column(
-                  children: [
-                    TagWidget(emoji: '🧾', label: 'Bill amount', width: 70),
-                    Row(
-                      children: [
-                        Text(
-                          '\u{20B9} ',
+            Flexible(
+              flex: 4,
+              child: Column(
+                children: [
+                  TagWidget(emoji: '🧾', label: 'Bill amount', width: 70),
+                  Row(
+                    children: [
+                      Text(
+                        '\u{20B9} ',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 20,
+                        ),
+                      ),
+                      Flexible(
+                        child: TextField(
+                          controller: _controllerBilled[index],
+                          keyboardType: TextInputType.number,
+                          textAlign: TextAlign.center,
+                          decoration: InputDecoration(
+                              border: InputBorder.none,
+                              hintText: '0'
+                          ),
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 20,
                           ),
                         ),
-                        Flexible(
-                          child: TextField(
-                            controller: _controllerBilled[index],
-                            keyboardType: TextInputType.number,
-                            textAlign: TextAlign.center,
-                            decoration: InputDecoration(
-                                border: InputBorder.none,
-                                hintText: '0'
-                            ),
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 20,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
-            ],
+            ),
+          ],
         ),
       ),
     );
