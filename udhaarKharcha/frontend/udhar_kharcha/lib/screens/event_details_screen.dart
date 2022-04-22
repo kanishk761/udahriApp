@@ -26,6 +26,7 @@ class _EventScreenState extends State<EventScreen> {
 
   Map bill = {};
   Map payers = {};
+  Map names = {};
   List<Widget> billWidget = [];
   List<Widget> payerWidget = [];
 
@@ -42,6 +43,7 @@ class _EventScreenState extends State<EventScreen> {
       setState(() {
         loading = false;
         if (obj.success) {
+          names = obj.data['phone_to_username'];
           bill = obj.data['event_bill'];
           var eveP = obj.data['event_payers'];
           eveP.keys.toList().forEach((key) {
@@ -69,7 +71,7 @@ class _EventScreenState extends State<EventScreen> {
     bill.forEach((key, value) {
       billWidget.add(ListTile(
         title: Text(
-          key,
+          names[key],
           overflow: TextOverflow.fade,
           softWrap: false,
           maxLines: 1,
@@ -95,7 +97,7 @@ class _EventScreenState extends State<EventScreen> {
     payerWidget = [];
     payers.forEach((key, value) {
       payerWidget.add(ListTile(
-        title: Text(key),
+        title: Text(names[key],),
         subtitle: Text(key),
         trailing: Text(
           '\u{20B9} ${value}',

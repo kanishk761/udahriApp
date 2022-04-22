@@ -209,22 +209,13 @@ class _U2UDetailsState extends State<U2UDetails> {
                         controller: _controllerAmount,
                         keyboardType: TextInputType.number,
                         decoration: InputDecoration(
-                          // prefixText: showPrefix ? '\u{20B9}' : '',
                           hintText: '\u{20B9} 0',
                           counterText: '',
-                          // errorText: _validateAmt ? 'Enter amount' : null,
                         ),
                         fullwidth: false,
                         minFontSize: 24,
                         style: TextStyle(fontSize: 50),
                         textAlign: TextAlign.center,
-                        // onChanged: (_val) {
-                        //   if(_val.length > 0)
-                        //     showPrefix = true;
-                        //   else
-                        //     showPrefix = false;
-                        //   setState(() {});
-                        // },
                       ),
                     ),
                     actionsPadding: EdgeInsets.all(20),
