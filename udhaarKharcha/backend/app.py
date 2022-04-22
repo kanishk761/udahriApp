@@ -16,7 +16,7 @@ from notification import sendTokenNotification
 app = Flask(__name__)
 
 ssl_context = SSLContext(PROTOCOL_TLSv1_2)
-ssl_context.load_verify_locations(r'C:\Users\saran\Desktop\csd\udahriApp\udhaarKharcha\backend\sf-class2-root.crt')
+ssl_context.load_verify_locations('/home/shubham/Desktop/Desktop/Courses/Computer-System-Design/Project/udahriApp/udhaarKharcha/backend/sf-class2-root.crt')
 ssl_context.verify_mode = CERT_REQUIRED
 auth_provider = PlainTextAuthProvider(username='Admin-at-442245796012', password='Zo2yw3zb//WD1muANf3BPM9ZhzmO2jjDCczR+NsOx/4=')
 cluster = Cluster(['cassandra.ap-south-1.amazonaws.com'], ssl_context=ssl_context, auth_provider=auth_provider, port=9142)
@@ -318,7 +318,7 @@ def approve_udhar():
     event_time = event_time.strftime("%b %d, %Y")
 
     title = 'Debt Approved'
-    body = '{0} ({1}) has approved your request to pay you Rs. {2} for {3} on {4}'.format(from_user_name, from_user_phone_no, str(-pairwise_udhar[pair_id]), event_detail, event_time)
+    body = '{0} ({1}) has approved your request to pay you \u20B9 {2} for {3} on {4}'.format(from_user_name, from_user_phone_no, str(-pairwise_udhar[pair_id]), event_detail, event_time)
     image = 'https://www.clipartmax.com/png/middle/157-1575710_open-approve-icon.png'
 
     try:
@@ -376,7 +376,7 @@ def reject_udhar():
     event_time = event_time.strftime("%b %d, %Y")
 
     title = 'Debt Rejected'
-    body = '{0} ({1}) has rejected your request to pay you Rs. {2} for {3} on {4}'.format(from_user_name, from_user_phone_no, str(-pairwise_udhar[pair_id]), event_detail, event_time)
+    body = '{0} ({1}) has rejected your request to pay you \u20B9 {2} for {3} on {4}'.format(from_user_name, from_user_phone_no, str(-pairwise_udhar[pair_id]), event_detail, event_time)
     image = 'http://images.clipartpanda.com/rejection-clipart-k4040162.jpg'
 
     try:
@@ -403,7 +403,7 @@ def pay():
     if amount < 0:
         return _response(False, 'incorrect format', '')
     
-    user_id_to_user_id_from_concat = reciever_number + payer_number
+    user_id_to_user_id_from_concat = payer_number + reciever_number
     pair_id_user_id_to_user_id_from = hashlib.md5(user_id_to_user_id_from_concat.encode()).hexdigest()
 
     q1 = 'SELECT total_amount FROM udhar_kharcha.split_bills WHERE pair_id = %s'
@@ -414,15 +414,14 @@ def pay():
     else:
         return _response(False,'Data not found in database', '')
 
-
-    user_id_from_user_id_to_concat = payer_number + reciever_number
+    user_id_from_user_id_to_concat = reciever_number + payer_number
     pair_id_user_id_from_user_id_to = hashlib.md5(user_id_from_user_id_to_concat.encode()).hexdigest()
 
     q2 = 'SELECT total_amount FROM udhar_kharcha.split_bills WHERE pair_id = %s'
     r2 = session.execute(q2, [pair_id_user_id_from_user_id_to])
 
     if len(r2.current_rows) > 0 and r2.current_rows[0][0] is not None:
-        amount_to_be_given = r1.current_rows[0][0]
+        amount_to_be_given = r2.current_rows[0][0]
     else:
         return _response(False,'Data not found in database', '')
 
@@ -440,6 +439,31 @@ def pay():
         result = session.execute(query, [amount_left, pair_id_user_id_from_user_id_to])
     except:
         return _response(False, 'DB error', '')
+
+    from_user_id = hashlib.md5(payer_number.encode()).hexdigest()
+    to_user_id = hashlib.md5(reciever_number.encode()).hexdigest()
+
+    try:
+        query = 'SELECT phone_no, username FROM udhar_kharcha.user_profile WHERE user_id = %s'
+        result = session.execute(query, [from_user_id])
+        result = result.one()
+        from_user_name = result.username
+
+        query = 'SELECT fcm_token FROM udhar_kharcha.fcm_mapping WHERE user_id = %s'
+        result = session.execute(query, [to_user_id])
+        result = result.one()
+        to_fcm_token = result.fcm_token
+    except:
+        return _response(False, 'DB error', '')
+
+    title = 'Payment Settlement'
+    body = '{0} ({1}) has paid you \u20B9 {2}. Remaining balance \u20B9 {3}'.format(from_user_name, payer_number, str(amount), str(amount_left))
+    image = 'http://images.clipartpanda.com/rejection-clipart-k4040162.jpg'
+
+    try:
+        sendTokenNotification(to_fcm_token, title, body, image)
+    except:
+        pass
 
     return _response(True, 'udhar amount settled', '')
     
@@ -497,112 +521,112 @@ def bill_split():
     if len(not_available) != 0:
         return _response(False, "Some users involved in the split are not signed up", not_available)
 
-    # for user_phone_no in participants_amount_on_bill:
-    #     count = 0
-    #     while count < 5:
-    #         response = add_personal_expense(user_phone_no, participants_amount_on_bill[user_phone_no], event_name)
-    #         response = json.loads(response.response[0].decode("utf-8"))
-    #         if response["success"]:
-    #             count = 4
-    #         count += 1
+    for user_phone_no in participants_amount_on_bill:
+        count = 0
+        while count < 5:
+            response = add_personal_expense(user_phone_no, participants_amount_on_bill[user_phone_no], event_name)
+            response = json.loads(response.response[0].decode("utf-8"))
+            if response["success"]:
+                count = 4
+            count += 1
 
     
-    # udhars_takers = []
-    # udhar_givers = []
-    # users_takers = []
-    # users_givers = []
+    udhars_takers = []
+    udhar_givers = []
+    users_takers = []
+    users_givers = []
 
-    # for user in participants_paid:
-    #     try:
-    #         if participants_paid[user] > participants_amount_on_bill[user]:
-    #             users_givers.append(user)
-    #             udhar_givers.append(participants_paid[user] - participants_amount_on_bill[user])
-    #         elif participants_paid[user] < participants_amount_on_bill[user]:
-    #             users_takers.append(user)
-    #             udhars_takers.append(participants_amount_on_bill[user] - participants_paid[user])
-    #     except:
-    #         return _response(False, 'incorrect format', '')
-    # min_transactions_for_cur_bill = min_transactions(udhars_takers, udhar_givers) #min_transactions class to compute min transactions
-    # min_transactions_for_cur_bill.get_transactions()
-    # udhar_givers_participants = min_transactions_for_cur_bill.get_final_udhar_giver_groups() 
-    # udhar_takers_participants = min_transactions_for_cur_bill.get_final_udhar_taker_groups() 
-
-
-
-    # pairwise_udhar = dict()
-
-    # event_time = datetime.now()
-    # event_id = hashlib.md5(event_time.strftime("%m/%d/%Y%H:%M:%S.%f").encode()).hexdigest()
-
-    # for i in range(len(udhar_givers_participants)):
-    #     k = 0
-    #     for j in range(len(udhar_givers_participants[i])):
-    #         while udhar_givers[udhar_givers_participants[i][j]] > 0:
-    #             user_to = users_givers[udhar_givers_participants[i][j]]
-    #             user_from = users_takers[udhar_takers_participants[i][k]]
-
-    #             user_to_user_from_concat = user_to + user_from
-    #             pair_id = hashlib.md5(user_to_user_from_concat.encode()).hexdigest()
-
-    #             try:
-    #                 #from A to B
-    #                 #store only records where user_to has to take from user_from
-    #                 query = SimpleStatement("UPDATE udhar_kharcha.split_bills SET event_ids= event_ids + %s WHERE pair_id = %s IF EXISTS", consistency_level = ConsistencyLevel.LOCAL_QUORUM)
-    #                 results = session.execute(query, ([event_id], pair_id))
-
-    #                 # SEE CONVENTION ABOVE
-    #                 to_user_id = hashlib.md5(users_givers[udhar_givers_participants[i][j]].encode()).hexdigest()
-    #                 from_user_id = hashlib.md5(users_takers[udhar_takers_participants[i][k]].encode()).hexdigest()
+    for user in participants_paid:
+        try:
+            if participants_paid[user] > participants_amount_on_bill[user]:
+                users_givers.append(user)
+                udhar_givers.append(participants_paid[user] - participants_amount_on_bill[user])
+            elif participants_paid[user] < participants_amount_on_bill[user]:
+                users_takers.append(user)
+                udhars_takers.append(participants_amount_on_bill[user] - participants_paid[user])
+        except:
+            return _response(False, 'incorrect format', '')
+    min_transactions_for_cur_bill = min_transactions(udhars_takers, udhar_givers) #min_transactions class to compute min transactions
+    min_transactions_for_cur_bill.get_transactions()
+    udhar_givers_participants = min_transactions_for_cur_bill.get_final_udhar_giver_groups() 
+    udhar_takers_participants = min_transactions_for_cur_bill.get_final_udhar_taker_groups() 
 
 
-    #                 query = SimpleStatement("INSERT INTO udhar_kharcha.split_bills (event_ids, to_user_id, pair_id, from_user_id, total_amount) VALUES (%s, %s, %s, %s, %s) IF NOT EXISTS", consistency_level = ConsistencyLevel.LOCAL_QUORUM)
-    #                 results = session.execute(query, ([event_id], to_user_id, pair_id, from_user_id, 0))
 
-    #                 #When searching by primary key "ALLOW FILTERING" is NOT required
+    pairwise_udhar = dict()
 
-    #                 query = SimpleStatement("SELECT username, phone_no FROM udhar_kharcha.user_profile WHERE user_id = %s", consistency_level = ConsistencyLevel.LOCAL_QUORUM)
-    #                 result = session.execute(query, [to_user_id])
-    #                 result = result.one()
-    #                 from_user_name, from_user_phone_no = result.username, result.phone_no
+    event_time = datetime.now()
+    event_id = hashlib.md5(event_time.strftime("%m/%d/%Y%H:%M:%S.%f").encode()).hexdigest()
 
-    #                 query = SimpleStatement("SELECT fcm_token FROM udhar_kharcha.fcm_mapping WHERE user_id = %s", consistency_level = ConsistencyLevel.LOCAL_QUORUM)
-    #                 result = session.execute(query, [from_user_id])
-    #                 result = result.one()
-    #                 to_fcm_token = result.fcm_token
+    for i in range(len(udhar_givers_participants)):
+        k = 0
+        for j in range(len(udhar_givers_participants[i])):
+            while udhar_givers[udhar_givers_participants[i][j]] > 0:
+                user_to = users_givers[udhar_givers_participants[i][j]]
+                user_from = users_takers[udhar_takers_participants[i][k]]
 
-    #                 #CONFUSION
-    #                 #sendTokenNotification(to_fcm_token, from_user_name, from_user_phone_no, 30)
+                user_to_user_from_concat = user_to + user_from
+                pair_id = hashlib.md5(user_to_user_from_concat.encode()).hexdigest()
 
-    #             except:
-    #                 return _response(False, 'DB error', '')
+                try:
+                    #from A to B
+                    #store only records where user_to has to take from user_from
+                    query = SimpleStatement("UPDATE udhar_kharcha.split_bills SET event_ids= event_ids + %s WHERE pair_id = %s IF EXISTS", consistency_level = ConsistencyLevel.LOCAL_QUORUM)
+                    results = session.execute(query, ([event_id], pair_id))
+
+                    # SEE CONVENTION ABOVE
+                    to_user_id = hashlib.md5(users_givers[udhar_givers_participants[i][j]].encode()).hexdigest()
+                    from_user_id = hashlib.md5(users_takers[udhar_takers_participants[i][k]].encode()).hexdigest()
+
+
+                    query = SimpleStatement("INSERT INTO udhar_kharcha.split_bills (event_ids, to_user_id, pair_id, from_user_id, total_amount) VALUES (%s, %s, %s, %s, %s) IF NOT EXISTS", consistency_level = ConsistencyLevel.LOCAL_QUORUM)
+                    results = session.execute(query, ([event_id], to_user_id, pair_id, from_user_id, 0))
+
+                    #When searching by primary key "ALLOW FILTERING" is NOT required
+
+                    query = SimpleStatement("SELECT username, phone_no FROM udhar_kharcha.user_profile WHERE user_id = %s", consistency_level = ConsistencyLevel.LOCAL_QUORUM)
+                    result = session.execute(query, [to_user_id])
+                    result = result.one()
+                    from_user_name, from_user_phone_no = result.username, result.phone_no
+
+                    query = SimpleStatement("SELECT fcm_token FROM udhar_kharcha.fcm_mapping WHERE user_id = %s", consistency_level = ConsistencyLevel.LOCAL_QUORUM)
+                    result = session.execute(query, [from_user_id])
+                    result = result.one()
+                    to_fcm_token = result.fcm_token
+
+                    #CONFUSION
+                    #sendTokenNotification(to_fcm_token, from_user_name, from_user_phone_no, 30)
+
+                except:
+                    return _response(False, 'DB error', '')
 
                 
-    #             if udhar_givers[udhar_givers_participants[i][j]] >= udhars_takers[udhar_takers_participants[i][k]]:
-    #                 pairwise_udhar[pair_id] = -udhars_takers[udhar_takers_participants[i][k]]
-    #                 udhar_givers[udhar_givers_participants[i][j]] -= udhars_takers[udhar_takers_participants[i][k]]
-    #                 k += 1
-    #             else:
-    #                 pairwise_udhar[pair_id] = -udhar_givers[udhar_givers_participants[i][j]]
-    #                 udhars_takers[udhar_takers_participants[i][k]] -= udhar_givers[udhar_givers_participants[i][j]]
-    #                 udhar_givers[udhar_givers_participants[i][j]] = 0
+                if udhar_givers[udhar_givers_participants[i][j]] >= udhars_takers[udhar_takers_participants[i][k]]:
+                    pairwise_udhar[pair_id] = -udhars_takers[udhar_takers_participants[i][k]]
+                    udhar_givers[udhar_givers_participants[i][j]] -= udhars_takers[udhar_takers_participants[i][k]]
+                    k += 1
+                else:
+                    pairwise_udhar[pair_id] = -udhar_givers[udhar_givers_participants[i][j]]
+                    udhars_takers[udhar_takers_participants[i][k]] -= udhar_givers[udhar_givers_participants[i][j]]
+                    udhar_givers[udhar_givers_participants[i][j]] = 0
 
-    #             title = 'New Debt'
-    #             body = '{0} ({1}) requested you to pay Rs. {2} for {3} on {4}'.format(from_user_name, from_user_phone_no, str(-pairwise_udhar[pair_id]), event_name, event_time.strftime("%b %d, %Y"))
-    #             image = 'https://aseemrastogi2.files.wordpress.com/2014/01/debt-management.jpg'
+                title = 'New Debt'
+                body = '{0} ({1}) requested you to pay \u20B9 {2} for {3} on {4}'.format(from_user_name, from_user_phone_no, str(-pairwise_udhar[pair_id]), event_name, event_time.strftime("%b %d, %Y"))
+                image = 'https://aseemrastogi2.files.wordpress.com/2014/01/debt-management.jpg'
 
 
-    #             try:
-    #                 sendTokenNotification(to_fcm_token, title, body, image)
-    #             except:
-    #                 pass
-    #             # redirect(url_for('notification_details', user_phone_no = user_from, notification_title = title, notification_body = body))
-    #             notification_details(user_from, title, body)
+                try:
+                    sendTokenNotification(to_fcm_token, title, body, image)
+                except:
+                    pass
+                # redirect(url_for('notification_details', user_phone_no = user_from, notification_title = title, notification_body = body))
+                notification_details(user_from, title, body)
 
-    # try:
-    #     query = SimpleStatement('INSERT INTO udhar_kharcha.event_details (event_detail, event_id, pairwise_udhar, event_payers, event_bill, event_time) VALUES (%s, %s, %s, %s, %s, %s);', consistency_level = ConsistencyLevel.LOCAL_QUORUM)
-    #     session.execute(query, (event_name, event_id, pairwise_udhar, participants_paid, participants_amount_on_bill, event_time))
-    # except:
-    #     return _response(False, 'DB error', '')
+    try:
+        query = SimpleStatement('INSERT INTO udhar_kharcha.event_details (event_detail, event_id, pairwise_udhar, event_payers, event_bill, event_time) VALUES (%s, %s, %s, %s, %s, %s);', consistency_level = ConsistencyLevel.LOCAL_QUORUM)
+        session.execute(query, (event_name, event_id, pairwise_udhar, participants_paid, participants_amount_on_bill, event_time))
+    except:
+        return _response(False, 'DB error', '')
 
     return _response(True, 'bill_split added', {'display_msg' : 'bill_split added'})
     
