@@ -10,7 +10,8 @@ from cassandra.query import SimpleStatement, tuple_factory
 from cassandra import ConsistencyLevel
 import hashlib
 from min_transactions import min_transactions
-from datetime import datetime   
+from datetime import datetime, date, timedelta
+from dateutil.relativedelta import relativedelta, MO
 from notification import sendTokenNotification
 
 app = Flask(__name__)
@@ -191,8 +192,7 @@ def get_pair_details():
 
             udhar_between_them = result.current_rows[0][1][pair_id_user_id_to_user_id_from]
             event_name = result.current_rows[0][0]
-            event_time = timestamp1.strftime("%b %d, %Y")
-            event_data = (events_id_take_list[i], event_name, udhar_between_them, event_time, True) #final field True represents that amount has to be TAKEN
+            event_data = (events_id_take_list[i], event_name, udhar_between_them, timestamp1, True) #final field True represents that amount has to be TAKEN
 
             response_data.append(event_data)
             i += 1
@@ -202,8 +202,7 @@ def get_pair_details():
 
             udhar_between_them = result.current_rows[0][1][pair_id_user_id_from_user_id_to]
             event_name = result.current_rows[0][0]
-            event_time = timestamp2.strftime("%b %d, %Y")
-            event_data = (events_id_give_list[j], event_name, udhar_between_them, event_time, False) #final field False represents that amount has to be GIVEN
+            event_data = (events_id_give_list[j], event_name, udhar_between_them, timestamp2, False) #final field False represents that amount has to be GIVEN
 
             response_data.append(event_data)
             j += 1
@@ -214,8 +213,7 @@ def get_pair_details():
 
         udhar_between_them = result.current_rows[0][1][pair_id_user_id_to_user_id_from]
         event_name = result.current_rows[0][0]
-        event_time = result.current_rows[0][2].strftime("%b %d, %Y")
-        event_data = (events_id_take_list[i], event_name, udhar_between_them, event_time, True) #final field True represents that amount has to be TAKEN
+        event_data = (events_id_take_list[i], event_name, udhar_between_them, result.current_rows[0][2], True) #final field True represents that amount has to be TAKEN
 
         response_data.append(event_data)
         i += 1
@@ -226,8 +224,7 @@ def get_pair_details():
 
         udhar_between_them = result.current_rows[0][1][pair_id_user_id_from_user_id_to]
         event_name = result.current_rows[0][0]
-        event_time = result.current_rows[0][2].strftime("%b %d, %Y")
-        event_data = (events_id_give_list[j], event_name, udhar_between_them, event_time, False) #final field False represents that amount has to be GIVEN
+        event_data = (events_id_give_list[j], event_name, udhar_between_them, result.current_rows[0][2], False) #final field False represents that amount has to be GIVEN
 
         response_data.append(event_data)
         j += 1
@@ -464,7 +461,10 @@ def pay():
         sendTokenNotification(to_fcm_token, title, body, image)
     except:
         pass
-
+    try:
+        notification_details(reciever_number, title, body)
+    except:
+        pass
     return _response(True, 'udhar amount settled', '')
     
 
@@ -847,7 +847,185 @@ def get_notification_details():
 
     return _response(True, "All personal expenses for input user", user_notifications)
 
+def find_higher_index(event_ids, end_date):
+    low, high = 0, len(event_ids)-1
+    query = "SELECT event_time FROM udhar_kharcha.event_details WHERE event_id = %s"
 
+    higher_index = -1
+
+    while low <= high:
+        mid = low + ((high-low)//2)
+
+        response = session.execute(query, [event_ids[mid]])
+
+        if response.one().event_time.date() > end_date:
+            high = mid - 1
+        else:
+            higher_index = mid
+            low = mid + 1
+
+    return higher_index
+
+def find_lower_index(event_ids, start_date):
+    low, high = 0, len(event_ids)-1
+    query = "SELECT event_time FROM udhar_kharcha.event_details WHERE event_id = %s"
+
+    lower_index = -1
+
+    while low <= high:
+        mid = low + ((high-low)//2)
+
+        response = session.execute(query, [event_ids[mid]])
+
+        if response.one().event_time.date() < start_date:
+            low = mid + 1
+        else:
+            lower_index = mid
+            high = mid - 1
+
+    return lower_index
+
+@app.route('/analytics', methods = ["POST"])
+def analytics():
+    input = request.get_json()
+    try:
+        user_phone_no = input["user_phone_no"]
+        type = input["type"] # "weekly" or "monthly"
+        if type != "weekly" and type != "monthly":
+            raise Exception
+    except:
+        return _response(False, 'incorrect format', '')
+
+    user_id = hashlib.md5(user_phone_no.encode()).hexdigest()
+
+    query = "SELECT event_ids FROM udhar_kharcha.personal_expenses WHERE user_id = %s"
+    response = session.execute(query, [user_id])
+
+    event_ids = response.one().event_ids
+
+    if type == "weekly":
+
+        no_of_weeks_used_in_analytics = 5
+
+        today = date.today()
+
+        lower_index = find_lower_index(event_ids, today + relativedelta(weekday=MO(-no_of_weeks_used_in_analytics)))
+        if lower_index != -1:
+            higher_index = find_higher_index(event_ids, today)
+
+        time_range_to_events = [None]*no_of_weeks_used_in_analytics
+        total_expense = 0
+        
+        query = "SELECT event_detail, event_time, event_bill FROM udhar_kharcha.event_details WHERE event_id = %s"
+
+        events_list = []
+        weekly_expense = 0
+
+        for i in range(-no_of_weeks_used_in_analytics, 0, 1):
+            start_date = today + relativedelta(weekday=MO(i))
+            end_date = min(start_date + timedelta(days=6), today)
+
+            time_range = [start_date, end_date]
+
+            time_range_to_events[i+no_of_weeks_used_in_analytics] = [time_range, [], 0]
+
+            if lower_index == -1 or (len(events_list) > 0 and events_list[-1][1].date() > end_date):
+                continue
+
+            breaked = False
+
+            while lower_index <= higher_index:
+                response = session.execute(query, [event_ids[lower_index]])
+                response = response.one()
+                if response.event_time.date() > end_date:
+                    time_range_to_events[i+no_of_weeks_used_in_analytics] = [time_range, events_list, weekly_expense]
+                    total_expense += weekly_expense
+                    events_list = [[response.event_detail, response.event_time, dict(response.event_bill)[user_phone_no]]]
+                    weekly_expense = dict(response.event_bill)[user_phone_no]
+                    lower_index += 1
+                    breaked = True
+                    break
+                else:
+                    events_list.append([response.event_detail, response.event_time, dict(response.event_bill)[user_phone_no]])
+                    weekly_expense += dict(response.event_bill)[user_phone_no]
+
+                lower_index += 1
+
+            if not breaked:
+                time_range_to_events[i+no_of_weeks_used_in_analytics] = [time_range, events_list, weekly_expense]
+                total_expense += weekly_expense
+                events_list = []
+                weekly_expense = 0
+
+        response = {'total_expense': total_expense, 'weekly_events_and_expense': time_range_to_events}
+
+        return _response(True, 'Weekly Events', response)
+
+    if type == "monthly":
+        today = date.today()
+
+        no_of_months_used_in_analytics = 6
+
+        last_day_of_month = today
+        first_day_of_month = today.replace(day=1)
+
+        time_range_to_events = [None]*no_of_months_used_in_analytics
+
+        time_range_to_events[-1] = [[first_day_of_month, last_day_of_month], [], 0]
+
+        for i in range(no_of_months_used_in_analytics-2, -1, -1):
+            last_day_of_month = first_day_of_month - timedelta(days=1)
+            first_day_of_month = last_day_of_month.replace(day=1)
+            time_range_to_events[i] = [[first_day_of_month, last_day_of_month], [], 0]
+
+        lower_index = find_lower_index(event_ids, time_range_to_events[0][0][0])
+        if lower_index != -1:
+            higher_index = find_higher_index(event_ids, today)
+
+        total_expense = 0
+        
+        query = "SELECT event_detail, event_time, event_bill FROM udhar_kharcha.event_details WHERE event_id = %s"
+
+        events_list = []
+        monthly_expense = 0
+    
+        for i in range(no_of_months_used_in_analytics):
+            start_date = time_range_to_events[i][0][0]
+            end_date = time_range_to_events[i][0][1]
+
+            time_range = [start_date, end_date]
+
+            if lower_index == -1 or (len(events_list) > 0 and events_list[-1][1].date() > end_date):
+                continue
+
+            breaked = False
+
+            while lower_index <= higher_index:
+                response = session.execute(query, [event_ids[lower_index]])
+                response = response.one()
+                if response.event_time.date() > end_date:
+                    time_range_to_events[i] = [time_range, events_list, monthly_expense]
+                    total_expense += monthly_expense
+                    events_list = [[response.event_detail, response.event_time, dict(response.event_bill)[user_phone_no]]]
+                    monthly_expense = dict(response.event_bill)[user_phone_no]
+                    lower_index += 1
+                    breaked = True
+                    break
+                else:
+                    events_list.append([response.event_detail, response.event_time, dict(response.event_bill)[user_phone_no]])
+                    monthly_expense += dict(response.event_bill)[user_phone_no]
+
+                lower_index += 1
+
+            if not breaked:
+                time_range_to_events[i] = [time_range, events_list, monthly_expense]
+                total_expense += monthly_expense
+                events_list = []
+                monthly_expense = 0
+
+        response = {'total_expense': total_expense, 'monthly_events_and_expense': time_range_to_events}
+
+        return _response(False, 'Monthly Events', response)
 
 if __name__ == '__main__':
     app.run(debug = True, threaded = True)
