@@ -918,7 +918,7 @@ def analytics():
     if type == "weekly":
 
         if not isExpensePresent:
-            return _response(True, 'Weekly Events', {'total_expense': 0, 'weekly_events_and_expense': []})
+            return _response(True, 'Weekly Events', {'total_expense': 0.0, 'weekly_events_and_expense': []})
 
         no_of_weeks_used_in_analytics = 5
 
@@ -929,12 +929,12 @@ def analytics():
             higher_index = find_higher_index(event_ids, today)
 
         time_range_to_events = [None]*no_of_weeks_used_in_analytics
-        total_expense = 0
+        total_expense = 0.0
         
         query = "SELECT event_detail, event_time, event_bill FROM udhar_kharcha.event_details WHERE event_id = %s"
 
         events_list = []
-        weekly_expense = 0
+        weekly_expense = 0.0
 
         for i in range(-no_of_weeks_used_in_analytics, 0, 1):
             start_date = today + relativedelta(weekday=MO(i))
@@ -982,7 +982,7 @@ def analytics():
                 time_range_to_events[i+no_of_weeks_used_in_analytics] = [time_range, events_list, weekly_expense]
                 total_expense += weekly_expense
                 events_list = []
-                weekly_expense = 0
+                weekly_expense = 0.0
 
         response = {'total_expense': total_expense, 'weekly_events_and_expense': time_range_to_events}
 
@@ -991,7 +991,7 @@ def analytics():
     if type == "monthly":
 
         if not isExpensePresent:
-            return _response(True, 'Monthly Events', {'total_expense': 0, 'monthly_events_and_expense': []})
+            return _response(True, 'Monthly Events', {'total_expense': 0.0, 'monthly_events_and_expense': []})
 
         today = date.today()
 
@@ -1013,12 +1013,12 @@ def analytics():
         if lower_index != -1:
             higher_index = find_higher_index(event_ids, today)
 
-        total_expense = 0
+        total_expense = 0.0
         
         query = "SELECT event_detail, event_time, event_bill FROM udhar_kharcha.event_details WHERE event_id = %s"
 
         events_list = []
-        monthly_expense = 0
+        monthly_expense = 0.0
     
         for i in range(no_of_months_used_in_analytics):
             start_date = time_range_to_events[i][0][0]
@@ -1064,11 +1064,11 @@ def analytics():
                 time_range_to_events[i] = [time_range, events_list, monthly_expense]
                 total_expense += monthly_expense
                 events_list = []
-                monthly_expense = 0
+                monthly_expense = 0.0
 
         response = {'total_expense': total_expense, 'monthly_events_and_expense': time_range_to_events}
 
-        return _response(False, 'Monthly Events', response)
+        return _response(True, 'Monthly Events', response)
 
 if __name__ == '__main__':
     app.run(debug = True, threaded = True)
