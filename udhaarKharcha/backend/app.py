@@ -899,11 +899,26 @@ def analytics():
     user_id = hashlib.md5(user_phone_no.encode()).hexdigest()
 
     query = "SELECT event_ids FROM udhar_kharcha.personal_expenses WHERE user_id = %s"
-    response = session.execute(query, [user_id])
+    count = 0
+    while count < 3:
+        try:
+            response = session.execute(query, [user_id])
+            count = 3
+        except:
+            count += 1
+            continue
+    
+    isExpensePresent = True
 
-    event_ids = response.one().event_ids
+    try:
+        event_ids = response.one().event_ids
+    except:
+        isExpensePresent = False
 
     if type == "weekly":
+
+        if not isExpensePresent:
+            return _response(True, 'Weekly Events', {'total_expense': 0, 'weekly_events_and_expense': []})
 
         no_of_weeks_used_in_analytics = 5
 
@@ -935,8 +950,20 @@ def analytics():
             breaked = False
 
             while lower_index <= higher_index:
-                response = session.execute(query, [event_ids[lower_index]])
-                response = response.one()
+                count = 0
+                while count < 3:
+                    try:
+                        response = session.execute(query, [event_ids[lower_index]])
+                        count = 3
+                    except:
+                        count += 1
+                        continue
+                
+                try:
+                    response = response.one()
+                except:
+                    return _response(False, 'DB error', '')
+
                 if response.event_time.date() > end_date:
                     time_range_to_events[i+no_of_weeks_used_in_analytics] = [time_range, events_list, weekly_expense]
                     total_expense += weekly_expense
@@ -962,6 +989,10 @@ def analytics():
         return _response(True, 'Weekly Events', response)
 
     if type == "monthly":
+
+        if not isExpensePresent:
+            return _response(True, 'Monthly Events', {'total_expense': 0, 'monthly_events_and_expense': []})
+
         today = date.today()
 
         no_of_months_used_in_analytics = 6
@@ -1001,8 +1032,20 @@ def analytics():
             breaked = False
 
             while lower_index <= higher_index:
-                response = session.execute(query, [event_ids[lower_index]])
-                response = response.one()
+                count = 0
+                while count < 3:
+                    try:
+                        response = session.execute(query, [event_ids[lower_index]])
+                        count = 3
+                    except:
+                        count += 1
+                        continue
+                
+                try:
+                    response = response.one()
+                except:
+                    return _response(False, 'DB error', '')
+
                 if response.event_time.date() > end_date:
                     time_range_to_events[i] = [time_range, events_list, monthly_expense]
                     total_expense += monthly_expense
