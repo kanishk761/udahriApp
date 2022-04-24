@@ -17,7 +17,7 @@ from notification import sendTokenNotification
 app = Flask(__name__)
 
 ssl_context = SSLContext(PROTOCOL_TLSv1_2)
-ssl_context.load_verify_locations('/home/shubham/Desktop/Desktop/Courses/Computer-System-Design/Project/udahriApp/udhaarKharcha/backend/sf-class2-root.crt')
+ssl_context.load_verify_locations(r'C:\Users\saran\Desktop\csd\udahriApp\udhaarKharcha\backend\sf-class2-root.crt')
 ssl_context.verify_mode = CERT_REQUIRED
 auth_provider = PlainTextAuthProvider(username='Admin-at-442245796012', password='Zo2yw3zb//WD1muANf3BPM9ZhzmO2jjDCczR+NsOx/4=')
 cluster = Cluster(['cassandra.ap-south-1.amazonaws.com'], ssl_context=ssl_context, auth_provider=auth_provider, port=9142)
@@ -519,7 +519,7 @@ def bill_split():
             not_available.append(user_phone_no)
             
     if len(not_available) != 0:
-        return _response(False, "Some users involved in the split are not signed up", not_available)
+        return _response(False, "Some users involved in the split are not signed up", {})
 
     for user_phone_no in participants_amount_on_bill:
         count = 0
@@ -942,7 +942,7 @@ def analytics():
 
             time_range = [start_date, end_date]
 
-            time_range_to_events[i+no_of_weeks_used_in_analytics] = [time_range, [], 0]
+            time_range_to_events[i+no_of_weeks_used_in_analytics] = [time_range, [], 0.0]
 
             if lower_index == -1 or (len(events_list) > 0 and events_list[-1][1].date() > end_date):
                 continue
@@ -995,19 +995,19 @@ def analytics():
 
         today = date.today()
 
-        no_of_months_used_in_analytics = 6
+        no_of_months_used_in_analytics = 5
 
         last_day_of_month = today
         first_day_of_month = today.replace(day=1)
 
         time_range_to_events = [None]*no_of_months_used_in_analytics
 
-        time_range_to_events[-1] = [[first_day_of_month, last_day_of_month], [], 0]
+        time_range_to_events[-1] = [[first_day_of_month, last_day_of_month], [], 0.0]
 
         for i in range(no_of_months_used_in_analytics-2, -1, -1):
             last_day_of_month = first_day_of_month - timedelta(days=1)
             first_day_of_month = last_day_of_month.replace(day=1)
-            time_range_to_events[i] = [[first_day_of_month, last_day_of_month], [], 0]
+            time_range_to_events[i] = [[first_day_of_month, last_day_of_month], [], 0.0]
 
         lower_index = find_lower_index(event_ids, time_range_to_events[0][0][0])
         if lower_index != -1:
