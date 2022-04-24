@@ -42,7 +42,6 @@ dependencies:
   flutter_emoji: ^2.4.0
   auto_size_text_field: ^1.0.1
   syncfusion_flutter_charts: ^20.1.50
-  toggle_switch: ^2.0.1
 
 dev_dependencies:
   flutter_test:

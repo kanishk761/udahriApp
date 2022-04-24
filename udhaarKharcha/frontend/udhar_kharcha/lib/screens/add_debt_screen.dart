@@ -73,6 +73,9 @@ class _SplitBillsScreenState extends State<SplitBillsScreen> {
     }
     catch(e) {
       print('failed to add bill split');
+      ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not fetch data'),duration: Duration(seconds: 1),)
+      );
     }
   }
 
