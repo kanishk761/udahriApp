@@ -7,6 +7,7 @@ sudo pip3 install flask
 sudo pip3 install cassandra-driver
 sudo apt-get install python3-tk
 sudo pip3 install firebase-admin
+sudo pip3 install python-dateutil
 mkdir ~/src
 sudo ln -sT ~/src /var/www/html/src
 mv app.py src/
