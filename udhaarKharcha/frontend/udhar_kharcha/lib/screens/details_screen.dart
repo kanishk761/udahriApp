@@ -39,7 +39,7 @@ class _U2UDetailsState extends State<U2UDetails> {
   bool loading = true;
   bool isFabVisible = true;
 
-  List<Color> _colors = [
+  final List<Color> _colors = [
     Colors.blue,
     Colors.orange,
     Colors.green,
@@ -146,36 +146,39 @@ class _U2UDetailsState extends State<U2UDetails> {
         child: loading ? Center(child: CircularProgressIndicator()) : SingleChildScrollView(
           child: Padding(
             padding: const EdgeInsets.fromLTRB(10,10,10,kFloatingActionButtonMargin + 80),
-            child: Column(
-              mainAxisSize: MainAxisSize.max,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Text(
-                  '\u{20B9} ${widget.amount.abs()}',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 45,
-                    color: widget.amount > 0 ? Colors.green : widget.amount < 0 ? Colors.red : Colors.black,
+            child: SizedBox(
+              width: double.infinity,
+              child: Column(
+                mainAxisSize: MainAxisSize.max,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Text(
+                    '\u{20B9} ${widget.amount.abs()}',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 45,
+                      color: widget.amount > 0 ? Colors.green : widget.amount < 0 ? Colors.red : Colors.black,
+                    ),
                   ),
-                ),
 
-                widget.amount > 0 ? TagWidget(emoji: '💰', label: '${widget.name_to} will pay you', width: 150, color: 0xffffffff,) :
-                widget.amount < 0 ? TagWidget(emoji: '💸', label: 'You have to pay ${widget.name_to}', width: 150,color: 0xffffffff,) :
-                TagWidget(emoji: '🤝', label: 'You are all settled', width: 120, color: 0xffffffff,),
-                SizedBox(height: 20,),
-                Text(
-                  'Transactions with ${widget.name_to}',
-                  overflow: TextOverflow.fade,
-                  softWrap: false,
-                  maxLines: 1,
-                  style: TextStyle(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 20,
+                  widget.amount > 0 ? TagWidget(emoji: '💰', label: '${widget.name_to} will pay you', width: 150, color: 0xffffffff,) :
+                  widget.amount < 0 ? TagWidget(emoji: '💸', label: 'You have to pay ${widget.name_to}', width: 150,color: 0xffffffff,) :
+                  TagWidget(emoji: '🤝', label: 'You are all settled', width: 120, color: 0xffffffff,),
+                  SizedBox(height: 20,),
+                  Text(
+                    'Transactions with ${widget.name_to}',
+                    overflow: TextOverflow.fade,
+                    softWrap: false,
+                    maxLines: 1,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 20,
+                    ),
                   ),
-                ),
-                for(var element in _events)
-                  transactionCard(element),
-              ]
+                  for(var element in _events)
+                    transactionCard(element),
+                ]
+              ),
             ),
           ),
         ),

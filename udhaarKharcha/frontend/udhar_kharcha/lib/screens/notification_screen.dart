@@ -20,7 +20,6 @@ class _NotificationScreenState extends State<NotificationScreen> {
     try {
       GetNotificationDetails obj = GetNotificationDetails(_phoneNumber);
       await obj.sendQuery();
-      print(obj.data);
       setState(() {
         if(obj.success)
           _notifications = obj.data;

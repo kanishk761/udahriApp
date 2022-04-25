@@ -1,4 +1,4 @@
-import 'dart:ui';
+import 'dart:math';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:udhar_kharcha/screens/analytics_screen.dart';
@@ -24,6 +24,18 @@ class _NavigationScreenState extends State<NavigationScreen> {
   int _selectedNavIndex = 0;
   final _screenName = ['Home','Analytics','Personal Expense'];
   String _screenTitle = 'Home';
+
+  final List<Color> _colors = [
+    Colors.blue,
+    Colors.orange,
+    Colors.green,
+    Colors.red,
+    Colors.blueGrey,
+    Colors.indigo,
+    Colors.brown,
+    Colors.pink,
+    Colors.deepPurpleAccent
+  ];
 
   void _onNavItemTapped(int index) {
     _pageController.jumpToPage(index);
@@ -77,7 +89,7 @@ class _NavigationScreenState extends State<NavigationScreen> {
               ),
               currentAccountPicture: CircleAvatar(
                 radius: 30,
-                backgroundColor: Colors.green,
+                backgroundColor: _colors[Random().nextInt(_colors.length)],
                 child: Text((_username.isNotEmpty?_username[0] :''),
                     style : TextStyle(
                         fontSize: 30,

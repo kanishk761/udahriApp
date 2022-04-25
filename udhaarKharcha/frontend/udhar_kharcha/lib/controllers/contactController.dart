@@ -81,7 +81,7 @@ class ContactsController {
               bool isSearching = searchController.text.isNotEmpty;
               return Container(
                   height: MediaQuery.of(context).size.height * 0.8,
-                  padding: EdgeInsets.all(20),
+                  padding: const EdgeInsets.all(20),
                   child: Column(
                       children: <Widget>[
                         Row(
@@ -91,8 +91,8 @@ class ContactsController {
                                 onPressed: () {
                                   Navigator.pop(context);
                                 },
-                                icon: Icon(Icons.arrow_back_ios)),
-                            Text(
+                                icon: const Icon(Icons.arrow_back_ios)),
+                            const Text(
                               'Add your friends',
                               style: TextStyle(
                                 fontSize: 20,
@@ -111,7 +111,7 @@ class ContactsController {
                                 }
                                 Navigator.pop(context,people);
                               },
-                              child: Text(
+                              child: const Text(
                                 'Done',
                                 style: TextStyle(
                                   fontSize: 20,
@@ -120,18 +120,19 @@ class ContactsController {
                             )
                           ],
                         ),
-                        SizedBox(height: 10,),
+                        const SizedBox(height: 10,),
                         Container(
                           child: TextField(
                             controller: searchController,
                             onChanged: (_val) {
-                              print(_val);
                               var _lst = filterContacts(_val);
                               setState(() {
-                                if(_lst==null)
+                                if(_lst==null) {
                                   isSearching = false;
-                                else
+                                }
+                                else {
                                   contactsFiltered = _lst;
+                                }
                               });
                             },
                             decoration: InputDecoration(
@@ -177,8 +178,9 @@ class ContactsController {
       },
     );
 
-    if(ret!=null)
+    if(ret!=null) {
       selectedPeople = ret;
+    }
   }
 
 }
@@ -215,28 +217,25 @@ class LabeledCheckbox extends StatelessWidget {
       onTap: () {
         onChanged(!value);
       },
-      child: Padding(
-          padding: EdgeInsets.symmetric(vertical: 0,horizontal: 0),
-          child: CheckboxListTile(
-              title: Text(label),
-              value: value,
-              onChanged: (bool? newValue) {
-                onChanged(newValue!);
-              },
-              subtitle: Text(subtitle),
-              secondary: Container(
-                  width: 36,
-                  height: 36,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
+      child: CheckboxListTile(
+          title: Text(label),
+          value: value,
+          onChanged: (bool? newValue) {
+            onChanged(newValue!);
+          },
+          subtitle: Text(subtitle),
+          secondary: Container(
+              width: 36,
+              height: 36,
+              decoration: const BoxDecoration(
+                shape: BoxShape.circle,
+              ),
+              child: CircleAvatar(
+                  child: Text(
+                      label.isNotEmpty ? label[0] : '',
+                      style: const TextStyle(color: Colors.white)
                   ),
-                  child: CircleAvatar(
-                      child: Text(
-                          label.isNotEmpty ? label[0] : '',
-                          style: TextStyle(color: Colors.white)
-                      ),
-                      backgroundColor: _colors[Random().nextInt(_colors.length)]
-                  )
+                  backgroundColor: _colors[Random().nextInt(_colors.length)]
               )
           )
       ),

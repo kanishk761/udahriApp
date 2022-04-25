@@ -1,7 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/painting.dart';
 import 'package:flutter/services.dart';
 import 'package:udhar_kharcha/controllers/contactController.dart';
 import 'package:udhar_kharcha/controllers/dataStore.dart';
@@ -29,11 +27,10 @@ class _SplitBillsScreenState extends State<SplitBillsScreen> {
   // complile all persons
   List <Widget> _personsWidget = [];
   List <SplitBillPerson> _splitBillPeople = [];
-  bool _validate = false;
 
-  bool isTax = false;
-  final _controllerTaxAmt = TextEditingController();
-  final _controllerTaxPer = TextEditingController();
+
+
+  bool _validate = false;
 
   void _addPeople() {
     _personsWidget = [];
@@ -49,7 +46,6 @@ class _SplitBillsScreenState extends State<SplitBillsScreen> {
     }
     for(var i = 0; i<_contact.selectedPeople.length; i++) {
       ContactPerson element = _contact.selectedPeople[i];
-      print(element.name);
       _controllerPaid.add(TextEditingController());
       _controllerBilled.add(TextEditingController());
       _splitBillPeople.add(SplitBillPerson(element.name, element.phoneNumber, 0, 0));
@@ -73,15 +69,22 @@ class _SplitBillsScreenState extends State<SplitBillsScreen> {
     try {
       BillSplit obj = BillSplit(participants_paid, participants_amount_on_bill, event);
       await obj.sendQuery();
-      print(obj.message);
+      if(obj.success) {
+        Navigator.pop(context);
+      }
+      else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('${obj.message}'),duration: Duration(seconds: 1),)
+        );
+      }
     }
     catch(e) {
-      print('failed to add bill split');
       ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Could not fetch data'),duration: Duration(seconds: 1),)
+          const SnackBar(content: Text('Operation failed'),duration: Duration(seconds: 1),)
       );
     }
   }
+
 
   @override
   void initState() {
@@ -98,8 +101,6 @@ class _SplitBillsScreenState extends State<SplitBillsScreen> {
     _controllerBilled.forEach((element) {
       element.dispose();
     });
-    _controllerTaxAmt.dispose();
-    _controllerTaxPer.dispose();
     super.dispose();
   }
 
@@ -107,17 +108,17 @@ class _SplitBillsScreenState extends State<SplitBillsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-      backgroundColor: Color(0xfff7f6fb),
+      backgroundColor: const Color(0xfff7f6fb),
       appBar: AppBar(
           elevation: 0,
-          iconTheme: IconThemeData(color: Colors.purple),
+          iconTheme: const IconThemeData(color: Colors.purple),
           leading: IconButton(
             icon: const Icon(
               Icons.arrow_back_ios_rounded,
             ),
             onPressed: () => Navigator.of(context).pop(),
           ),
-          backgroundColor: Color(0xfff7f6fb),
+          backgroundColor: const Color(0xfff7f6fb),
           title: const Text(
             'Add Udhar',
             style: TextStyle(
@@ -142,87 +143,23 @@ class _SplitBillsScreenState extends State<SplitBillsScreen> {
             },
             maxLength: 50,
             maxLengthEnforcement: MaxLengthEnforcement.enforced,
-            style: TextStyle(
+            style: const TextStyle(
                 fontSize: 20
             ),
             decoration: InputDecoration(
-              contentPadding: EdgeInsets.all(20),
-              border: OutlineInputBorder(),
+              contentPadding: const EdgeInsets.all(20),
+              border: const OutlineInputBorder(),
               hintText: 'What is this for ?',
               errorText: _validate ? 'Cannot be empty' : null,
               counterText: '',
             ),
           ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              TextButton.icon(
-                onPressed: () => _onAddPeopleTapped(context),
-                icon: Icon(Icons.add),
-                label: Text('Add people to udhar',),
-              ),
-              Row(
-                children: [
-                  Text(
-                    'Tax Split',
-                    style: TextStyle(
-                      color: Colors.purple,
-                    ),
-                  ),
-                  Switch(
-                    value: isTax,
-                    onChanged: (bool value) {
-                      setState(() {
-                        isTax = value;
-                        if(!isTax) {
-                          _controllerTaxAmt.clear();
-                          _controllerTaxPer.clear();
-                        }
-                      });
-                    },
-                  ),
-                ],
-              ),
-            ],
-          ),
 
-          !isTax ? Container() :
-              Row(
-                children: [
-                  SizedBox(width: 40,),
-                  Flexible(
-                    flex: 1,
-                    child: TextField(
-                      controller: _controllerTaxPer,
-                      keyboardType: TextInputType.number,
-                      textAlign: TextAlign.center,
-                      decoration: InputDecoration(
-                          hintText: 'Tax %'
-                      ),
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  SizedBox(width: 40,),
-                  Flexible(
-                    flex: 1,
-                    child: TextField(
-                      controller: _controllerTaxAmt,
-                      keyboardType: TextInputType.number,
-                      textAlign: TextAlign.center,
-                      decoration: InputDecoration(
-                          hintText: 'Tax Amount'
-                      ),
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  SizedBox(width: 40,),
-                ],
-              ),
-          !isTax ? Container() :SizedBox(height: 20,),
+          TextButton.icon(
+            onPressed: () => _onAddPeopleTapped(context),
+            icon: const Icon(Icons.add),
+            label: const Text('Add people to udhar',),
+          ),
 
           Expanded(
             child: SingleChildScrollView(
@@ -235,7 +172,7 @@ class _SplitBillsScreenState extends State<SplitBillsScreen> {
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
-              child: Text(
+              child: const Text(
                 'Add',
                 style: TextStyle(
                     fontWeight: FontWeight.bold,
@@ -271,7 +208,6 @@ class _SplitBillsScreenState extends State<SplitBillsScreen> {
                     );
                   }
                   else if(paidTotal!=0 && billTotal!=0 && paidTotal == billTotal) {
-                    print('done');
                     _splitBillPeople.forEach((element) {
                       print(element.name);
                       print(element.phoneNumber);
@@ -279,7 +215,6 @@ class _SplitBillsScreenState extends State<SplitBillsScreen> {
                       print(element.billedAmount);
                     });
                     await AddBillSplit(_controllerEvent.text);
-                    Navigator.pop(context);
                   }
                   else {
                     ScaffoldMessenger.of(context).showSnackBar(

@@ -3,22 +3,15 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:udhar_kharcha/screens/addPersonalExpense_screen.dart';
 import 'package:udhar_kharcha/screens/add_debt_screen.dart';
-import 'package:udhar_kharcha/screens/details_screen.dart';
-import 'package:udhar_kharcha/screens/event_details_screen.dart';
 import 'package:udhar_kharcha/screens/navigationScreen.dart';
 import 'package:udhar_kharcha/screens/login_screen.dart';
-import 'package:udhar_kharcha/screens/personal_expense.dart';
 import 'package:udhar_kharcha/screens/signup_screen.dart';
 import 'package:udhar_kharcha/screens/welcome.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-
 import 'dart:async';
-
-import 'package:flutter/foundation.dart';
-import 'package:http/http.dart' as http;
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-
 import 'package:udhar_kharcha/screens/notification_screen.dart';
+
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey(debugLabel: "Main Navigator");
 bool notification_clicked = false;
@@ -108,35 +101,6 @@ class MyApp extends StatelessWidget {
           fontFamily: 'Nunito'
       ),
       initialRoute: '/',
-      // onGenerateRoute: (RouteSettings settings) {
-      //     switch (settings.name) {
-      //       case '/':
-      //         return MaterialPageRoute(
-      //           builder: (_) => const WelcomeScreen(),
-      //         );
-      //       case '/home':
-      //         return MaterialPageRoute(
-      //           builder: (_) => const NavigationScreen(),
-      //         );
-      //       case '/notify':
-      //         print("notify");
-      //         return MaterialPageRoute(
-      //           builder: (_) => NotificationScreen()
-      //         );
-      //       case '/login':
-      //         return MaterialPageRoute(
-      //           builder: (_) => Login()
-      //         );
-      //       case '/signup':
-      //         return MaterialPageRoute(
-      //           builder: (_) => SignupScreen()
-      //         );
-      //       default:
-      //         return MaterialPageRoute(
-      //           builder: (_) => NavigationScreen()
-      //         );
-      //     }
-      // },
       routes: {
         '/' : (context) => FirebaseAuth.instance.currentUser==null ? WelcomeScreen() : NavigationScreen(),
         '/login' : (context) => Login(),

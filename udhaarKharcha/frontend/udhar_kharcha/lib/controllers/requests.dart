@@ -253,7 +253,6 @@ class EventDetails {
       success = response['success'];
       message = response['message'];
       data = response['data'];
-      print(data);
     }
     on DioError catch(e) {
       print(e.message);
@@ -282,7 +281,6 @@ class GetNotificationDetails {
       success = response['success'];
       message = response['message'];
       data = response['data'];
-      print(data);
     }
     on DioError catch(e) {
       print(e.message);
@@ -319,7 +317,6 @@ class ApproveRejectUdhar {
       success = response['success'];
       message = response['message'];
       data = response['data'];
-      print(data);
     }
     on DioError catch(e) {
       print(e.message);

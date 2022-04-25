@@ -33,7 +33,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
   String displayTitle = '';
   List<bool> isSelected = [true,false];
   int selectedType = 0;
-  double maximum_expense = 50;
+  List<double> maximum_expense = [50,50];
 
   bool loading = true;
 
@@ -49,8 +49,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
         var _events = objM.data['weekly_events_and_expense'];
         for(var ele in _events) {
           String _label = parseDate(ele[0][0],'dd MMM') +'-'+ parseDate(ele[0][1],'dd MMM');
-          print(ele[2].runtimeType);
-          maximum_expense = max(maximum_expense,ele[2].toDouble());
+          maximum_expense[0] = max(maximum_expense[0],ele[2].toDouble());
           weeklyData.add(AnalyticsData(_label,ele[2].toDouble(),ele[1]));
         }
       }
@@ -67,7 +66,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
         var _events = objW.data['monthly_events_and_expense'];
         for(var ele in _events) {
           String _label = parseDate(ele[0][0],'MMM');
-          maximum_expense = max(maximum_expense,ele[2].toDouble());
+          maximum_expense[1] = max(maximum_expense[1],ele[2].toDouble());
           monthlyData.add(AnalyticsData(_label,ele[2].toDouble(),ele[1]));
         }
       }
@@ -209,7 +208,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                       ): null
                     ),
                     primaryYAxis: NumericAxis(
-                        minimum: 0, maximum: maximum_expense+100, interval: 100,
+                        minimum: 0, maximum: maximum_expense[selectedType]+100, interval: 100,
                         majorGridLines: MajorGridLines(width: 0),
                         axisLine: AxisLine(width: 0)
                     ),
@@ -270,8 +269,8 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
               ),
             ),
 
-            for(var element in (selected!=null ? data[selected!].breakdownEvents : []))
-              transactionCard(element)
+            for(int i=0,n=(selected!=null ? data[selected!].breakdownEvents.length:0);(selected!=null)&&i<data[selected!].breakdownEvents.length;i++)
+              transactionCard(data[selected!].breakdownEvents[n-i-1])
 
           ]),
         ),
