@@ -1,13 +1,12 @@
-import 'dart:io';
 import 'dart:ui';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 import 'package:udhar_kharcha/controllers/requests.dart';
+import 'package:udhar_kharcha/controllers/utilities.dart';
 import 'package:udhar_kharcha/screens/loading.dart';
 import 'package:udhar_kharcha/screens/tag_widget.dart';
-import 'package:intl/intl.dart';
 
 
 class PersonalExpenseScreen extends StatefulWidget {
@@ -50,12 +49,6 @@ class _PersonalExpenseScreenState extends State<PersonalExpenseScreen> {
     catch (e) {
       print('Failed to get personal expense');
     }
-  }
-
-  String parseDate(date) {
-    final DateFormat formatter = DateFormat('dd MMM');
-    final String formatted = formatter.format(HttpDate.parse(date));
-    return formatted;
   }
 
 
@@ -117,9 +110,9 @@ class _PersonalExpenseScreenState extends State<PersonalExpenseScreen> {
                         padding: const EdgeInsets.fromLTRB(20,10,15,0),
                         child: Row(
                           children: [
-                            TagWidget(emoji: '📅', label: parseDate(date) ,width: 50,),
+                            TagWidget(emoji: '📅', label: parseDate(date,'dd MMM') ,width: 70,),
                             SizedBox(width: 6,),
-                            TagWidget(emoji: '✋', label: 'Personal' , width: 60,),
+                            TagWidget(emoji: '✋', label: 'Personal' , width: 70,),
                             Expanded(
                               child: Text(
                                 'You spent',

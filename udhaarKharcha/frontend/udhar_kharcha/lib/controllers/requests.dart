@@ -358,3 +358,35 @@ class SettlePayments {
     }
   }
 }
+
+
+class GetAnalytics{
+  late String user_phone_no;
+  late String type;
+
+  bool success = false;
+  String message = "Network Error";
+  Map data = {};
+
+  GetAnalytics(String phone,String _type) {
+    user_phone_no = phone;
+    type = _type;
+  }
+
+  Future<void> sendQuery() async {
+    try {
+      dynamic response = await dio.post('/analytics', data: {
+        'user_phone_no': user_phone_no,
+        'type' : type,
+      });
+      response = response.data;//Map<String, dynamic>.from(response.data);
+      success = response['success'];
+      message = response['message'];
+      data = Map<String, dynamic>.from(response['data']);
+    }
+    on DioError catch(e) {
+      print(e.message);
+    }
+  }
+
+}

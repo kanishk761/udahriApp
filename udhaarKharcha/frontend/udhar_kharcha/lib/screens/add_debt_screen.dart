@@ -31,6 +31,10 @@ class _SplitBillsScreenState extends State<SplitBillsScreen> {
   List <SplitBillPerson> _splitBillPeople = [];
   bool _validate = false;
 
+  bool isTax = false;
+  final _controllerTaxAmt = TextEditingController();
+  final _controllerTaxPer = TextEditingController();
+
   void _addPeople() {
     _personsWidget = [];
     _controllerPaid = [];
@@ -73,6 +77,9 @@ class _SplitBillsScreenState extends State<SplitBillsScreen> {
     }
     catch(e) {
       print('failed to add bill split');
+      ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not fetch data'),duration: Duration(seconds: 1),)
+      );
     }
   }
 
@@ -91,6 +98,8 @@ class _SplitBillsScreenState extends State<SplitBillsScreen> {
     _controllerBilled.forEach((element) {
       element.dispose();
     });
+    _controllerTaxAmt.dispose();
+    _controllerTaxPer.dispose();
     super.dispose();
   }
 
@@ -144,11 +153,77 @@ class _SplitBillsScreenState extends State<SplitBillsScreen> {
               counterText: '',
             ),
           ),
-          TextButton.icon(
-            onPressed: () => _onAddPeopleTapped(context),
-            icon: Icon(Icons.add),
-            label: Text('Add people to udhar',),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              TextButton.icon(
+                onPressed: () => _onAddPeopleTapped(context),
+                icon: Icon(Icons.add),
+                label: Text('Add people to udhar',),
+              ),
+              Row(
+                children: [
+                  Text(
+                    'Tax Split',
+                    style: TextStyle(
+                      color: Colors.purple,
+                    ),
+                  ),
+                  Switch(
+                    value: isTax,
+                    onChanged: (bool value) {
+                      setState(() {
+                        isTax = value;
+                        if(!isTax) {
+                          _controllerTaxAmt.clear();
+                          _controllerTaxPer.clear();
+                        }
+                      });
+                    },
+                  ),
+                ],
+              ),
+            ],
           ),
+
+          !isTax ? Container() :
+              Row(
+                children: [
+                  SizedBox(width: 40,),
+                  Flexible(
+                    flex: 1,
+                    child: TextField(
+                      controller: _controllerTaxPer,
+                      keyboardType: TextInputType.number,
+                      textAlign: TextAlign.center,
+                      decoration: InputDecoration(
+                          hintText: 'Tax %'
+                      ),
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: 40,),
+                  Flexible(
+                    flex: 1,
+                    child: TextField(
+                      controller: _controllerTaxAmt,
+                      keyboardType: TextInputType.number,
+                      textAlign: TextAlign.center,
+                      decoration: InputDecoration(
+                          hintText: 'Tax Amount'
+                      ),
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: 40,),
+                ],
+              ),
+          !isTax ? Container() :SizedBox(height: 20,),
+
           Expanded(
             child: SingleChildScrollView(
               child : Column(
@@ -156,6 +231,7 @@ class _SplitBillsScreenState extends State<SplitBillsScreen> {
               ),
             ),
           ),
+
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(

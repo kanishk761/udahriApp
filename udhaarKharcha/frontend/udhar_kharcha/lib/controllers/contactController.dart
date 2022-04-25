@@ -1,6 +1,5 @@
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:udhar_kharcha/controllers/dataStore.dart';
 import 'package:flutter_contacts/flutter_contacts.dart';
@@ -198,7 +197,7 @@ class LabeledCheckbox extends StatelessWidget {
   final ValueChanged<bool> onChanged;
   final String subtitle;
 
-  List<Color> _colors = [
+  final List<Color> _colors = [
     Colors.blue,
     Colors.orange,
     Colors.green,

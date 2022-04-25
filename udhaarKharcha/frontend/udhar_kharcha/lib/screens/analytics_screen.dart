@@ -1,9 +1,12 @@
 import 'dart:ui';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
+import 'package:udhar_kharcha/controllers/dataStore.dart';
 import 'package:udhar_kharcha/controllers/requests.dart';
-import 'package:toggle_switch/toggle_switch.dart';
+import 'package:udhar_kharcha/controllers/utilities.dart';
 import 'package:udhar_kharcha/screens/tag_widget.dart';
+import 'dart:math';
 
 
 class AnalyticsScreen extends StatefulWidget {
@@ -15,32 +18,86 @@ class AnalyticsScreen extends StatefulWidget {
 
 class _AnalyticsScreenState extends State<AnalyticsScreen> {
 
-  List<_SalesData> data1 = [
-    _SalesData('Jan', 35),
-    _SalesData('Feb', 28),
-    _SalesData('Mar', 34),
-    _SalesData('Apr', 32),
-    _SalesData('May', 40),
-  ];
+  String _username = FirebaseAuth.instance.currentUser?.displayName ?? '';
+  String _phoneNumber = FirebaseAuth.instance.currentUser?.phoneNumber ?? '';
 
-  List<_SalesData> data2 = [
-    _SalesData('Jan', 10),
-    _SalesData('Feb', 20),
-    _SalesData('Mar', 30),
-    _SalesData('Apr', 40),
-    _SalesData('May', 50),
 
-  ];
-
-  List<_SalesData> data = [];
-  int _initLabel = 0;
+  List<AnalyticsData> weeklyData = [];
+  List<AnalyticsData> monthlyData = [];
+  List<AnalyticsData> data = [];
 
   int? selected;
+
+  List total_expense = [0,0];
+  double displayExpense = 0;
+  String displayTitle = '';
+  List<bool> isSelected = [true,false];
+  int selectedType = 0;
+  double maximum_expense = 50;
+
+  bool loading = true;
+
+
+  getAnalyticsData() async{
+    data = [];
+    // get weekly
+    GetAnalytics objM = GetAnalytics(_phoneNumber, 'weekly');
+    try {
+      await objM.sendQuery();
+      if (objM.success) {
+        total_expense[0] = objM.data['total_expense'];
+        var _events = objM.data['weekly_events_and_expense'];
+        for(var ele in _events) {
+          String _label = parseDate(ele[0][0],'dd MMM') +'-'+ parseDate(ele[0][1],'dd MMM');
+          print(ele[2].runtimeType);
+          maximum_expense = max(maximum_expense,ele[2].toDouble());
+          weeklyData.add(AnalyticsData(_label,ele[2].toDouble(),ele[1]));
+        }
+      }
+    }
+    catch (e) {
+      print('failed weekly');
+    }
+    // get monthly
+    GetAnalytics objW = GetAnalytics(_phoneNumber, 'monthly');
+    try {
+      await objW.sendQuery();
+      if (objW.success) {
+        total_expense[1] = objW.data['total_expense'];
+        var _events = objW.data['monthly_events_and_expense'];
+        for(var ele in _events) {
+          String _label = parseDate(ele[0][0],'MMM');
+          maximum_expense = max(maximum_expense,ele[2].toDouble());
+          monthlyData.add(AnalyticsData(_label,ele[2].toDouble(),ele[1]));
+        }
+      }
+    }
+    catch (e) {
+      print('failed monthly');
+    }
+
+    loading = false;
+    if(!objM.success || !objW.success){
+      ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not fetch data'),duration: Duration(seconds: 1),)
+      );
+    }
+    else{
+      setState(() {
+        data = weeklyData;
+        displayExpense = selected==null ? total_expense[0] : data[selected!].amount;
+        selectedType = 0 ;
+        displayTitle = 'Last 4 weeks';
+      });
+    }
+  }
+
+
 
   @override
   void initState() {
     super.initState();
-    data = data1;
+    getAnalyticsData();
     print('analytics init');
   }
 
@@ -48,7 +105,8 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Color(0xfff7f6fb),
-      body: SingleChildScrollView(
+      body: loading ? Center(child: CircularProgressIndicator()) : SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
         child: Padding(
           padding: const EdgeInsets.fromLTRB(10,0,10,0),
           child: Column(children: [
@@ -65,7 +123,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
                         Text(
-                          'Between 1 Apr - 30 Apr',
+                          '${displayTitle}',
                           overflow: TextOverflow.fade,
                           softWrap: true,
                           maxLines: 1,
@@ -73,30 +131,64 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                               color: Colors.grey[700]
                           ),
                         ),
-                        ToggleSwitch(
-                          inactiveFgColor : Colors.grey,
-                          inactiveBgColor: Color(0xfff7f6fb),
-                          minHeight: 30.0,
-                          cornerRadius: 20.0,
-                          initialLabelIndex: _initLabel,
-                          totalSwitches: 2,
-                          labels: ['Weekly', 'Monthly'],
-                          onToggle: (index) {
-                            print('switched to: $index');
-                            setState(() {
-                              _initLabel = index!=null ? index : 0;
-                              if(index==0)
-                                data = data1;
-                              else
-                                data = data2;
-                            });
+                        ToggleButtons(
+                          borderColor: Color(0xfff7f6fb),
+                          fillColor: Colors.purple,
+                          borderWidth: 0,
+                          color : Colors.grey,
+                          selectedColor: Colors.white,
+                          borderRadius: BorderRadius.circular(20),
+                          constraints: BoxConstraints(
+                            minHeight: 35,
+                            maxHeight: 40,
+                            minWidth: 70,
+                            maxWidth: 80,
+                          ),
+                          children: <Widget>[
+                            Text(
+                              'Weekly',
+                            ),
+                            Text(
+                              'Monthly',
+                            ),
+                          ],
+                          onPressed: (int index) {
+                            if(!isSelected[index]){
+                              setState(() {
+                                if(index==0) {
+                                  isSelected[0] = true;
+                                  isSelected[1] = false;
+
+                                  selectedType = 0;
+                                  data = weeklyData;
+                                  displayTitle = 'Last 4 weeks';
+                                }
+                                else{
+                                  isSelected[0] = false;
+                                  isSelected[1] = true;
+
+                                  selectedType = 1;
+                                  data = monthlyData;
+                                  displayTitle = 'Last 4 months';
+                                }
+
+                                if(selected!=null) {
+                                  displayExpense = data[selected!].amount;
+                                  displayTitle = 'In ${data[selected!].label}';
+                                }
+                                else{
+                                  displayExpense = total_expense[index];
+                                }
+                              });
+                            }
                           },
+                          isSelected: isSelected,
                         ),
                       ],
                     ),
                   ),
                   Text(
-                    '\u{20B9} 500',
+                    '\u{20B9} ${displayExpense}',
                     overflow: TextOverflow.fade,
                     softWrap: true,
                     maxLines: 1,
@@ -111,28 +203,42 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                     primaryXAxis: CategoryAxis(
                       majorGridLines: MajorGridLines(width: 0),
                       axisLine: AxisLine(width: 0),
+                      maximumLabelWidth: 55,
+                      labelStyle: selectedType == 0 ? TextStyle(
+                        fontSize: 10
+                      ): null
                     ),
                     primaryYAxis: NumericAxis(
-                        minimum: 0, maximum: 50, interval: 10,
+                        minimum: 0, maximum: maximum_expense+100, interval: 100,
                         majorGridLines: MajorGridLines(width: 0),
                         axisLine: AxisLine(width: 0)
                     ),
-                    //tooltipBehavior: TooltipBehavior(enable: true),
                     selectionType: SelectionType.cluster,
                     onSelectionChanged: (val) {
                       print(val.pointIndex);
                       setState(() {
-                        selected == val.pointIndex
-                            ? selected = null :
-                        selected = val.pointIndex;
+                        if(selected == val.pointIndex){
+                          selected = null;
+                        }
+                        else {
+                          selected = val.pointIndex;
+                        }
+                        if(selected!=null) {
+                          displayExpense = data[selected!].amount;
+                          displayTitle = 'In ${data[selected!].label}';
+                        }
+                        else {
+                          displayExpense = total_expense[selectedType];
+                          displayTitle = selectedType == 1 ? 'Last 4 months' : 'Last 4 weeks';
+                        }
                       });
                     },
                     plotAreaBackgroundColor : Color(0xfff7f6fb),
-                    series: <ChartSeries<_SalesData, String>>[
-                      ColumnSeries<_SalesData, String>(
+                    series: <ChartSeries<AnalyticsData, String>>[
+                      ColumnSeries<AnalyticsData, String>(
                         dataSource: data,
-                        xValueMapper: (_SalesData data, _) => data.year,
-                        yValueMapper: (_SalesData data, _) => data.sales,
+                        xValueMapper: (AnalyticsData data, _) => data.label,
+                        yValueMapper: (AnalyticsData data, _) => data.amount,
                         name: 'Expense',
                         selectionBehavior: SelectionBehavior(
                           enable: true,
@@ -142,7 +248,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                           selectedColor: Colors.pinkAccent
                         ),
                         borderRadius: BorderRadius.circular(5),
-                        gradient: LinearGradient(
+                        gradient: const LinearGradient(
                             begin: Alignment.bottomCenter,
                             end: Alignment.topCenter,
                             colors: [Colors.purple, Colors.pinkAccent]
@@ -164,9 +270,8 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
               ),
             ),
 
-            for(int i = 0;i<data.length;i++)
-              selected==null ? Container() :
-              transactionCard(data[selected!])
+            for(var element in (selected!=null ? data[selected!].breakdownEvents : []))
+              transactionCard(element)
 
           ]),
         ),
@@ -188,9 +293,9 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
               padding: const EdgeInsets.fromLTRB(20,10,15,0),
               child: Row(
                 children: [
-                  TagWidget(emoji: '📅', label: '' ,width: 50,),
+                  TagWidget(emoji: '📅', label: parseDate(element[1], 'dd MMM') ,width: 70,),
                   SizedBox(width: 6,),
-                  TagWidget(emoji: '✋', label: 'Personal' , width: 60,),
+                  TagWidget(emoji: '✋', label: 'Personal' , width: 70,),
                   Expanded(
                     child: Text(
                       'You spent',
@@ -207,13 +312,13 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
             ListTile(
                 onTap: null,
                 title: Text(
-                  'element.name',
+                  element[0],
                   style: TextStyle(
                     fontSize: 18,
                   ),
                 ),
                 trailing: Text(
-                  '\u{20B9} ${element.sales}',
+                  '\u{20B9} ${element[2]}',
                   overflow: TextOverflow.fade,
                   softWrap: false,
                   style: TextStyle(
@@ -227,14 +332,5 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     );
   }
 
-
-
-
 }
 
-class _SalesData {
-  _SalesData(this.year, this.sales);
-
-  final String year;
-  final double sales;
-}

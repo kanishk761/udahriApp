@@ -38,3 +38,12 @@ class Event {
   late String date;
   Event(this.name,this.id,this.amount,this.isApproved,this.willGiveMoney,this.date);
 }
+
+class AnalyticsData{
+  late String label;
+  late double amount;
+  late List breakdownEvents;
+  AnalyticsData(this.label,this.amount,this.breakdownEvents);
+}
+
+

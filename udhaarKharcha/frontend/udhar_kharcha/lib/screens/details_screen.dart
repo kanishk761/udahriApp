@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:udhar_kharcha/controllers/dataStore.dart';
 import 'package:udhar_kharcha/controllers/requests.dart';
+import 'package:udhar_kharcha/controllers/utilities.dart';
 import 'package:udhar_kharcha/screens/event_details_screen.dart';
 import 'package:udhar_kharcha/screens/tag_widget.dart';
 import 'dart:math';
@@ -86,11 +87,6 @@ class _U2UDetailsState extends State<U2UDetails> {
     }
   }
 
-  String parseDate(date) {
-    final DateFormat formatter = DateFormat('dd MMM');
-    final String formatted = formatter.format(HttpDate.parse(date));
-    return formatted;
-  }
 
   ScrollController _scrollController = ScrollController();
 
@@ -285,7 +281,7 @@ class _U2UDetailsState extends State<U2UDetails> {
             children: [
               Row(
                 children: [
-                  TagWidget(emoji: '📅', label: parseDate(element.date) ,width: 70,),
+                  TagWidget(emoji: '📅', label: parseDate(element.date,'dd MMM') ,width: 70,),
                   SizedBox(width: 5,),
                   element.willGiveMoney ? TagWidget(emoji: '💰', label: 'You took \u{20B9}${element.amount.abs()}' ,width: 120,) :
                   TagWidget(emoji: '💸', label: 'You gave \u{20B9}${element.amount.abs()}' ,width: 120,),
