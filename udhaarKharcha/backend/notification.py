@@ -14,7 +14,7 @@ def sendTokenNotification(fcm_token, title, body, image):
                 title=title,
                 body=body,
                 # image=image,
-                color='#f45342',
+                color='#800080',
                 click_action='FLUTTER_NOTIFICATION_CLICK'
             )
         ),
@@ -42,7 +42,7 @@ def sendTopicNotification(topic = 'analytics'):
                 title=title,
                 body=body,
                 # image=image,
-                color='#f45342',
+                color='#800080',
                 click_action='FLUTTER_NOTIFICATION_CLICK'
             )
         )
