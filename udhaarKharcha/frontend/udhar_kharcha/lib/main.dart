@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:udhar_kharcha/screens/addPersonalExpense_screen.dart';
 import 'package:udhar_kharcha/screens/add_debt_screen.dart';
@@ -27,20 +28,25 @@ FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNo
 
 Future<void> selectNotification(String? payload) async {
   if (payload != null) {
-    print('notification payload:');
-    print(payload.length);
-    print("select notification");
+    if (kDebugMode) {
+      print('notification payload:');
+      print(payload.length);
+      print("select notification");
+    }
     navigatorKey.currentState?.pushNamed('/notify');
-    print("no way");
   }
   else
-    print("received null");
+    if (kDebugMode) {
+      print("received null");
+    }
 }
 
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp();
-  print(message.notification?.title);
-  print('Handling a background message ${message.messageId}');
+  if (kDebugMode) {
+    print(message.notification?.title);
+    print('Handling a background message ${message.messageId}');
+  }
 }
 
 void main() async {
@@ -61,11 +67,15 @@ void main() async {
 
     final NotificationAppLaunchDetails? notificationAppLaunchDetails = await flutterLocalNotificationsPlugin.getNotificationAppLaunchDetails();
 
-    print(notificationAppLaunchDetails!.didNotificationLaunchApp);
+    if (kDebugMode) {
+      print(notificationAppLaunchDetails!.didNotificationLaunchApp);
+    }
 
-    if(notificationAppLaunchDetails.didNotificationLaunchApp == true) {
+    if(notificationAppLaunchDetails!.didNotificationLaunchApp == true) {
       notification_clicked = true;
-      print("not lauched by notification:(");
+      if (kDebugMode) {
+        print("not lauched by notification:(");
+      }
       navigatorKey.currentState?.pushNamed('/notify');
     }
 
@@ -73,16 +83,15 @@ void main() async {
         onSelectNotification: selectNotification);
 
     FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) async {
-      print("hello there");
-      print(message.notification!.body != null);
-      // if (message.notification!.body != null) {
-        print("inside");
-        print(navigatorKey.currentState);
-        navigatorKey.currentState?.pushNamed('/notify');
-      // }
+      if (kDebugMode) {
+        print("hello there");
+        print(message.notification!.body != null);
+      }
     });
 
-    print("finally running");
+    if (kDebugMode) {
+      print("finally running");
+    }
 
   runApp(const MyApp());
 }

@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
 import 'package:udhar_kharcha/controllers/dataStore.dart';
@@ -55,7 +56,9 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
       }
     }
     catch (e) {
-      print('failed weekly');
+      if (kDebugMode) {
+        print('failed weekly');
+      }
     }
     // get monthly
     GetAnalytics objW = GetAnalytics(_phoneNumber, 'monthly');
@@ -72,7 +75,9 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
       }
     }
     catch (e) {
-      print('failed monthly');
+      if (kDebugMode) {
+        print('failed monthly');
+      }
     }
 
     loading = false;
@@ -97,7 +102,9 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
   void initState() {
     super.initState();
     getAnalyticsData();
-    print('analytics init');
+    if (kDebugMode) {
+      print('analytics init');
+    }
   }
 
   @override
@@ -122,7 +129,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
                         Text(
-                          '${displayTitle}',
+                          displayTitle,
                           overflow: TextOverflow.fade,
                           softWrap: true,
                           maxLines: 1,
@@ -214,7 +221,9 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                     ),
                     selectionType: SelectionType.cluster,
                     onSelectionChanged: (val) {
-                      print(val.pointIndex);
+                      if (kDebugMode) {
+                        print(val.pointIndex);
+                      }
                       setState(() {
                         if(selected == val.pointIndex){
                           selected = null;

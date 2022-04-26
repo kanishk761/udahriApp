@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:udhar_kharcha/controllers/dataStore.dart';
 import 'package:udhar_kharcha/controllers/requests.dart';
@@ -39,7 +38,6 @@ class _EventScreenState extends State<EventScreen> {
     try {
       EventDetails obj = EventDetails(event_id);
       await obj.sendQuery();
-      print(obj.data);
       setState(() {
         loading = false;
         if (obj.success) {
@@ -175,12 +173,12 @@ class _EventScreenState extends State<EventScreen> {
               SizedBox(height: 5,),
               Row(
                 children: [
-                  TagWidget(emoji: '📅', label: '17 Jul' ,width: 50,color: 0xffffffff,),
+                  TagWidget(emoji: '📅', label: '17 Jul' ,width: 70,color: 0xffffffff,),
                   SizedBox(width: 5,),
 
                   !widget.eventData.willGiveMoney ?
-                  TagWidget(emoji: '💰', label: 'Take from ${widget.name_to}', width: 100,color: 0xffffffff,) :
-                  TagWidget(emoji: '💸', label: 'Pay to ${widget.name_to}', width: 100,color: 0xffffffff,)
+                  TagWidget(emoji: '💰', label: 'Take from ${widget.name_to}', width: 150,color: 0xffffffff,) :
+                  TagWidget(emoji: '💸', label: 'Pay to ${widget.name_to}', width: 150,color: 0xffffffff,)
                 ],
               ),
 

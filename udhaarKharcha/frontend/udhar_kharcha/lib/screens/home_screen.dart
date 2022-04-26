@@ -1,4 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:udhar_kharcha/controllers/requests.dart';
 import 'package:udhar_kharcha/screens/details_screen.dart';
@@ -38,14 +39,15 @@ class _HomeScreenState extends State<HomeScreen> {
         );
       }
     });
-    print(persons);
   }
 
 
   @override
   void initState() {
     super.initState();
-    print('home init');
+    if (kDebugMode) {
+      print('home init');
+    }
     getUdharData();
   }
 

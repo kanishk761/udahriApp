@@ -1,4 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:udhar_kharcha/controllers/requests.dart';
 
@@ -26,7 +27,9 @@ class _NotificationScreenState extends State<NotificationScreen> {
       });
     }
     catch(e) {
-      print('failed to get notifications');
+      if (kDebugMode) {
+        print('failed to get notifications');
+      }
     }
   }
 

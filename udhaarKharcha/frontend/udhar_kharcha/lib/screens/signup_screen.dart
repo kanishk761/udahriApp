@@ -1,4 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:udhar_kharcha/controllers/requests.dart';
@@ -26,7 +27,9 @@ class _SignupScreenState extends State<SignupScreen> {
         Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
       }
       else {
-        print(obj.message);
+        if (kDebugMode) {
+          print(obj.message);
+        }
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Something went wrong')
@@ -35,7 +38,9 @@ class _SignupScreenState extends State<SignupScreen> {
       }
     }
     else{
-      print('Something went wrong');
+      if (kDebugMode) {
+        print('Something went wrong');
+      }
     }
   }
 

@@ -1,5 +1,6 @@
 // ignore_for_file: non_constant_identifier_names
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 
 var options = BaseOptions(
   baseUrl: 'http://ec2-52-66-200-162.ap-south-1.compute.amazonaws.com',
@@ -35,10 +36,14 @@ class SignUp {
       success = response['success'];
       message = response['message'];
       data = Map<String, dynamic>.from(response['data']);
-      print(message);
+      if (kDebugMode) {
+        print(message);
+      }
     }
     catch(e) {
-      print(e);
+      if (kDebugMode) {
+        print(e);
+      }
     }
   }
 }
@@ -67,10 +72,14 @@ class UpdateToken {
       success = response['success'];
       message = response['message'];
       data = Map<String, dynamic>.from(response['data']);
-      print('response: '+ message);
+      if (kDebugMode) {
+        print('response: '+ message);
+      }
     }
     catch(e) {
-      print(e);
+      if (kDebugMode) {
+        print(e);
+      }
     }
 	}
 }
@@ -99,9 +108,13 @@ class GetPairDetails {
       success = response['success'];
       message = response['message'];
       data = response['data'];
-      print('response: '+ message);
+      if (kDebugMode) {
+        print('response: '+ message);
+      }
     } on DioError catch(e) {
-      print(e.message);
+      if (kDebugMode) {
+        print(e.message);
+      }
     }
 	}
 }
@@ -133,10 +146,14 @@ class BillSplit {
       success = response['success'];
       message = response['message'];
       data = Map<String, dynamic>.from(response['data']);
-      print('response: '+ message);
+      if (kDebugMode) {
+        print('response: '+ message);
+      }
     }
     catch(e) {
-      print(e);
+      if (kDebugMode) {
+        print(e);
+      }
     }
 	}
 }
@@ -162,10 +179,14 @@ class GetUdhar {
       success = response['success'];
       message = response['message'];
       data = Map<String, dynamic>.from(response['data']);
-      print('response: '+ message);
+      if (kDebugMode) {
+        print('response: '+ message);
+      }
     }
     on DioError catch(e) {
-      print(e.message);
+      if (kDebugMode) {
+        print(e.message);
+      }
     }
 	}
 }
@@ -199,7 +220,9 @@ class AddPersonalExpense {
       message = response['message'];
     }
     catch(e) {
-      print(e);
+      if (kDebugMode) {
+        print(e);
+      }
     }
 	}
 }
@@ -227,7 +250,9 @@ class GetPersonalExpense {
       data = response['data'];
     }
     on DioError catch(e) {
-      print(e.message);
+      if (kDebugMode) {
+        print(e.message);
+      }
     }
 	}
 }
@@ -255,7 +280,9 @@ class EventDetails {
       data = response['data'];
     }
     on DioError catch(e) {
-      print(e.message);
+      if (kDebugMode) {
+        print(e.message);
+      }
     }
 	}
 }
@@ -283,7 +310,9 @@ class GetNotificationDetails {
       data = response['data'];
     }
     on DioError catch(e) {
-      print(e.message);
+      if (kDebugMode) {
+        print(e.message);
+      }
     }
 	}
 }
@@ -319,7 +348,9 @@ class ApproveRejectUdhar {
       data = response['data'];
     }
     on DioError catch(e) {
-      print(e.message);
+      if (kDebugMode) {
+        print(e.message);
+      }
     }
   }
 }
@@ -351,7 +382,9 @@ class SettlePayments {
       message = response['message'];
     }
     on DioError catch(e) {
-      print(e.message);
+      if (kDebugMode) {
+        print(e.message);
+      }
     }
   }
 }
@@ -382,7 +415,9 @@ class GetAnalytics{
       data = Map<String, dynamic>.from(response['data']);
     }
     on DioError catch(e) {
-      print(e.message);
+      if (kDebugMode) {
+        print(e.message);
+      }
     }
   }
 

@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:intl/intl.dart';
 import 'package:auto_size_text_field/auto_size_text_field.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -80,7 +81,9 @@ class _U2UDetailsState extends State<U2UDetails> {
       });
     }
     catch(e){
-      print(e);
+      if (kDebugMode) {
+        print(e);
+      }
       ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Something went wrong'),duration: Duration(seconds: 1))
       );
@@ -201,23 +204,21 @@ class _U2UDetailsState extends State<U2UDetails> {
                   return AlertDialog(
                     content: Padding(
                       padding: const EdgeInsets.all(10),
-                      child: AutoSizeTextField(
-                        maxLength: 9,
-                        minWidth: 100,
-                        autofocus: true,
+                      child: TextField(
                         controller: _controllerAmount,
+                        maxLength: 9,
                         keyboardType: TextInputType.number,
                         decoration: InputDecoration(
+                          border: OutlineInputBorder(),
                           hintText: '\u{20B9} 0',
                           counterText: '',
+                          labelText: 'Enter amount',
                         ),
-                        fullwidth: false,
-                        minFontSize: 24,
-                        style: TextStyle(fontSize: 50),
+                        style: TextStyle(fontSize: 20),
                         textAlign: TextAlign.center,
                       ),
                     ),
-                    actionsPadding: EdgeInsets.all(20),
+                     actionsPadding: EdgeInsets.fromLTRB(0,0,20,20),
                     actions: [
                       ElevatedButton(
                         child: Text('Ok'),
@@ -230,7 +231,6 @@ class _U2UDetailsState extends State<U2UDetails> {
                     ],
                   );
                 });
-                // TODO : Settle payment HTTP error
                 if(ret!=null && ret!='' && ret!='0'){
                   double amt = double.parse(ret!);
                   try{
@@ -242,6 +242,11 @@ class _U2UDetailsState extends State<U2UDetails> {
                       setState(() {
                         widget.amount += amt;
                       });
+                    }
+                    else{
+                      ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text(obj.message),duration: Duration(seconds: 1))
+                      );
                     }
                   }
                   catch(e){

@@ -1,4 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:udhar_kharcha/controllers/contactController.dart';
@@ -209,10 +210,12 @@ class _SplitBillsScreenState extends State<SplitBillsScreen> {
                   }
                   else if(paidTotal!=0 && billTotal!=0 && paidTotal == billTotal) {
                     _splitBillPeople.forEach((element) {
-                      print(element.name);
-                      print(element.phoneNumber);
-                      print(element.paidAmount);
-                      print(element.billedAmount);
+                      if (kDebugMode) {
+                        print(element.name);
+                        print(element.phoneNumber);
+                        print(element.paidAmount);
+                        print(element.billedAmount);
+                      }
                     });
                     await AddBillSplit(_controllerEvent.text);
                   }

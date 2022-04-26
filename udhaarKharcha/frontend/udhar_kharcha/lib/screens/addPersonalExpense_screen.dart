@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'package:auto_size_text_field/auto_size_text_field.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:udhar_kharcha/controllers/requests.dart';
@@ -36,7 +37,9 @@ class _AddPersonalExpenseScreenState extends State<AddPersonalExpenseScreen> {
       await obj.sendQuery();
     }
     catch (e) {
-      print('Failed to add personal expense');
+      if (kDebugMode) {
+        print('Failed to add personal expense');
+      }
     }
   }
 

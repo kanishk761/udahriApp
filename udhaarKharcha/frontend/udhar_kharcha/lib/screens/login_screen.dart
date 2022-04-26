@@ -28,7 +28,6 @@ class _LoginState extends State<Login> {
   }
 
   void _submit() {
-    print('number is +91'+_controller.text);
     Navigator.of(context).push(
       MaterialPageRoute(builder: (context) => OtpScreen(phoneNumber: '+91'+_controller.text,))
     );

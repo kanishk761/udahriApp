@@ -1,12 +1,7 @@
 import 'package:flutter/material.dart';
-
 import 'dart:async';
-import 'dart:convert';
-
-import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
-import 'package:http/http.dart' as http;
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 class WelcomeScreen extends StatefulWidget {
@@ -24,9 +19,13 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
   late AndroidNotificationChannel channel;
 
   void handleMessage(RemoteMessage message) {
-    print(message.data);
+    if (kDebugMode) {
+      print(message.data);
+    }
     if(message.data["screen"] == 'launch_analytics_page') {
-      print("yes, I am changing screen");
+      if (kDebugMode) {
+        print("yes, I am changing screen");
+      }
       // Navigator.of(context).pushNamed('/notify');
     }
   }
@@ -84,8 +83,9 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
       RemoteNotification? notification = message.notification;
       AndroidNotification? android = message.notification?.android;
       if (notification != null && android != null && !kIsWeb) {
-        print("hello");
-        print("I am in foreground");
+        if (kDebugMode) {
+          print("hello, I am in foreground");
+        }
         flutterLocalNotificationsPlugin.show(
           notification.hashCode,
           notification.title,
@@ -97,8 +97,9 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
               channelDescription: channel.description,
               // TODO add a proper drawable resource to android, for now using
               //      one that already exists in example app.
-              icon: 'launch_background',
-              largeIcon: const DrawableResourceAndroidBitmap('launch_background')
+              icon: '@mipmap/ic_launcher',
+              largeIcon: const DrawableResourceAndroidBitmap('@mipmap/ic_launcher'),
+              color: Colors.purple
             ),
           ),
         );
@@ -118,20 +119,19 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
   @override
   void initState() {
     super.initState();
-    print('chala');
     handlerInitState();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xfff7f6fb),
+      backgroundColor: const Color(0xfff7f6fb),
       body: Padding(
         padding: const EdgeInsets.fromLTRB(20,50,20,0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            SizedBox(height: 30.0,),
+            const SizedBox(height: 30.0,),
 
             Center(
               child: Text(
@@ -142,11 +142,10 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                 ),
         ),
             ),
-            SizedBox(height: 10.0,),
+            const SizedBox(height: 10.0,),
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                style: ButtonStyle(),
                 onPressed: () {
                     Navigator.pushNamed(context, '/login');
                 },

@@ -1,12 +1,10 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:udhar_kharcha/controllers/requests.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:flutter/foundation.dart';
-import 'package:http/http.dart' as http;
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 
 class OtpScreen extends StatefulWidget {
@@ -29,13 +27,17 @@ class _OtpScreenState extends State<OtpScreen> {
   void updateTokenAndSubscribe() async {
     FirebaseMessaging messaging = FirebaseMessaging.instance;
     String? token = await messaging.getToken(vapidKey: VAPIDKEY);
-    print(token);
-    print("tokenPrinted");
+    if (kDebugMode) {
+      print(token);
+      print("tokenPrinted");
+    }
     await FirebaseMessaging.instance.subscribeToTopic('analytics');
     if(token!=null) {
       UpdateToken update_token = UpdateToken(widget.phoneNumber, token);
       update_token.sendQuery();
-      print("token updated");
+      if (kDebugMode) {
+        print("token updated");
+      }
     }
     await FirebaseMessaging.instance.subscribeToTopic('analytics');
   }
@@ -46,7 +48,9 @@ class _OtpScreenState extends State<OtpScreen> {
     await FirebaseAuth.instance.verifyPhoneNumber(
         phoneNumber: widget.phoneNumber,
         verificationCompleted: (PhoneAuthCredential authCredential) async{
-          print("Verification completed : ${authCredential.smsCode}");
+          if (kDebugMode) {
+            print("Verification completed : ${authCredential.smsCode}");
+          }
           if(!mounted) return;
           setState(() {
             _otp = authCredential.smsCode.toString();
@@ -56,10 +60,14 @@ class _OtpScreenState extends State<OtpScreen> {
           if (authCredential.smsCode != null) {
             try {
               await FirebaseAuth.instance.signInWithCredential(authCredential);
-              print(FirebaseAuth.instance.currentUser);
-              print('Ho raha hai sign in');
+              if (kDebugMode) {
+                print(FirebaseAuth.instance.currentUser);
+                print('Ho raha hai sign in');
+              }
             } on FirebaseAuthException catch(e){
-              print(e.message);
+              if (kDebugMode) {
+                print(e.message);
+              }
             }
             if(FirebaseAuth.instance.currentUser?.displayName != null)
               Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
@@ -68,18 +76,24 @@ class _OtpScreenState extends State<OtpScreen> {
           }
         },
         verificationFailed: (FirebaseAuthException e) {
-          print(e.message);
+          if (kDebugMode) {
+            print(e.message);
+          }
         },
         codeSent: (String confimationCode, int? resendCode) {
           if(!mounted) return;
-          print('OTP sent');
+          if (kDebugMode) {
+            print('OTP sent');
+          }
           setState(() {
             _otp = confimationCode;
             loading = false;
           });
         },
         codeAutoRetrievalTimeout: (String confimationCode) {
-          print('Device stopped reading OTP automatically');
+          if (kDebugMode) {
+            print('Device stopped reading OTP automatically');
+          }
         },
     );
   }
@@ -87,7 +101,9 @@ class _OtpScreenState extends State<OtpScreen> {
   @override
   void initState() {
     super.initState();
-    print(FirebaseAuth.instance.currentUser);
+    if (kDebugMode) {
+      print(FirebaseAuth.instance.currentUser);
+    }
     verifyPhone();
   }
 
@@ -145,7 +161,9 @@ class _OtpScreenState extends State<OtpScreen> {
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () async{
-                  print(_otp);
+                  if (kDebugMode) {
+                    print(_otp);
+                  }
 
                   // login user
                   try {
@@ -154,7 +172,9 @@ class _OtpScreenState extends State<OtpScreen> {
                         verificationId: _otp, smsCode: _controller.text))
                         .then((value) async {
                       if(value.user != null) {
-                        print('Verified by click');
+                        if (kDebugMode) {
+                          print('Verified by click');
+                        }
                         if(FirebaseAuth.instance.currentUser?.displayName != null)
                           Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
                         else
@@ -163,7 +183,9 @@ class _OtpScreenState extends State<OtpScreen> {
                     });
                     updateTokenAndSubscribe();
                   } on FirebaseAuthException catch (e) {
-                    print(e.message);
+                    if (kDebugMode) {
+                      print(e.message);
+                    }
                     ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
                             content: Text('Invalid OTP')
