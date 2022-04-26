@@ -406,10 +406,13 @@ def pay():
     q1 = 'SELECT total_amount FROM udhar_kharcha.split_bills WHERE pair_id = %s'
     r1 = session.execute(q1, [pair_id_user_id_to_user_id_from])
 
+
+    user_id_to_user_id_from_tuple = True
     if len(r1.current_rows) > 0 and r1.current_rows[0][0] is not None:
         amount_to_be_taken = r1.current_rows[0][0]
     else:
-        return _response(False,'Data not found in database', '')
+        user_id_to_user_id_from_tuple = False
+        amount_to_be_taken = 0
 
     user_id_from_user_id_to_concat = reciever_number + payer_number
     pair_id_user_id_from_user_id_to = hashlib.md5(user_id_from_user_id_to_concat.encode()).hexdigest()
@@ -427,8 +430,9 @@ def pay():
         return _response(False,'inconsistent pay', '')
     
     try:
-        query = SimpleStatement('UPDATE udhar_kharcha.split_bills SET total_amount = 0 WHERE pair_id = %s', consistency_level = ConsistencyLevel.LOCAL_QUORUM)
-        result = session.execute(query, [pair_id_user_id_to_user_id_from])
+        if user_id_to_user_id_from_tuple:
+            query = SimpleStatement('UPDATE udhar_kharcha.split_bills SET total_amount = 0 WHERE pair_id = %s', consistency_level = ConsistencyLevel.LOCAL_QUORUM)
+            result = session.execute(query, [pair_id_user_id_to_user_id_from])
 
         amount_left = settle_amount - amount
 
