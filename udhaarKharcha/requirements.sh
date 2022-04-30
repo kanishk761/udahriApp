@@ -1,4 +1,3 @@
-#https://www.codementor.io/@jqn/deploy-a-flask-app-on-aws-ec2-13hp1ilqy2
 sudo apt-get update
 sudo apt-get install apache2
 sudo apt-get install libapache2-mod-wsgi-py3
